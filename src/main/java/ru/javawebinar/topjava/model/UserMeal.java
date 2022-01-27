@@ -36,5 +36,4 @@ public class UserMeal {
     public LocalTime getLocalTime() {
         return dateTime.toLocalTime();
     }
-
 }
