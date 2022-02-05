@@ -36,4 +36,12 @@ public class Meal {
     public LocalTime getLocalTime() {
         return dateTime.toLocalTime();
     }
+
+    public LocalDate getDate() {
+        return dateTime.toLocalDate();
+    }
+
+    public LocalTime getTime() {
+        return dateTime.toLocalTime();
+    }
 }
