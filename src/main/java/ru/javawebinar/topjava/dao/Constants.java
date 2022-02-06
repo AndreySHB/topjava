@@ -1,6 +1,5 @@
-package ru.javawebinar.topjava.data;
+package ru.javawebinar.topjava.dao;
 
-import java.text.SimpleDateFormat;
 import java.time.format.DateTimeFormatter;
 
 public class Constants {
