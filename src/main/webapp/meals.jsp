@@ -22,28 +22,22 @@
 <h2>Meals</h2>
 <table>
     <tr>
-        <th><c:out value="Date"/></th>
-        <th><c:out value="Description"/></th>
-        <th><c:out value="Calories"/></th>
+        <th>Date</th>
+        <th>Description</th>
+        <th>Calories</th>
     </tr>
-    <c:forEach items="${requestScope.dishes}" var="dish">
-
-        <c:if test="${dish.excess}">
-            <tr style="color: red">
-        </c:if>
-        <c:if test="${!dish.excess}">
-            <tr style="color: green">
-        </c:if>
-        <td><c:out value="${requestScope.DTF.format(dish.dateTime)}"/></td>
-        <td><c:out value="${dish.description}"/></td>
-        <td><c:out value="${dish.calories}"/></td>
-        <td><a href="meals?action=edit&mealId=<c:out value="${dish.id}"/>">Update</a></td>
-        <td><a href="meals?action=delete&mealId=<c:out value="${dish.id}"/>">Delete</a></td>
+    <c:forEach items="${requestScope.meals}" var="meal">
+        <tr style="color: ${meal.excess ? "red" : "green"}">
+            <td>${requestScope.FORMATTER.format(meal.dateTime)}</td>
+            <td>${meal.description}</td>
+            <td>${meal.calories}</td>
+            <td><a href="meals?action=edit&mealId=${meal.id}">Update</a></td>
+            <td><a href="meals?action=delete&mealId=${meal.id}">Delete</a></td>
         </tr>
 
     </c:forEach>
 </table>
-<p><a href="meals?action=insert">Add Meal</a></p>
+<p><a href="meals?action=add">Add Meal</a></p>
 </body>
 </html>
 
