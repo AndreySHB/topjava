@@ -47,7 +47,10 @@ public class InMemoryMealDao implements MealDao {
 
     @Override
     public boolean removeMeal(int id) {
-        Meal meal = data.keySet().stream().filter(e -> e.getId() == id).findAny().orElse(null);
+        Meal meal;
+        synchronized (lock) {
+            meal = data.keySet().stream().filter(e -> e.getId() == id).findAny().orElse(null);
+        }
         if (meal == null) return false;
         return data.remove(meal) == value;
     }
