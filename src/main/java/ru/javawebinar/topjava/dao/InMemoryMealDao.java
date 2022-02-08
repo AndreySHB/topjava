@@ -37,7 +37,10 @@ public class InMemoryMealDao implements MealDao {
 
     @Override
     public Meal getMeal(int id) {
-        Meal meal = data.keySet().stream().filter(e -> e.getId() == id).findAny().orElse(null);
+        Meal meal;
+        synchronized (lock) {
+            meal = data.keySet().stream().filter(e -> e.getId() == id).findAny().orElse(null);
+        }
         if (meal == null) return null;
         return new Meal(id, meal.getDateTime(), meal.getDescription(), meal.getCalories());
     }
@@ -51,8 +54,8 @@ public class InMemoryMealDao implements MealDao {
 
     @Override
     public Meal editMeal(int id, Meal meal) {
-        removeMeal(id);
         synchronized (lock) {
+            removeMeal(id);
             meal.setId(id);
             data.put(meal, value);
         }
