@@ -10,8 +10,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class InMemoryMealDao implements MealDao {
-    private static final Object lock = new Object();
-    private static final Object value = new Object();
+    private final Object lock = new Object();
+    private final Object value = new Object();
     private final AtomicInteger id = new AtomicInteger(0);
     private final ConcurrentHashMap<Meal, Object> data = new ConcurrentHashMap<>();
 
