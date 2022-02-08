@@ -26,9 +26,9 @@
         <th>Description</th>
         <th>Calories</th>
     </tr>
-    <c:forEach items="${requestScope.meals}" var="meal">
+    <c:forEach items="${meals}" var="meal">
         <tr style="color: ${meal.excess ? "red" : "green"}">
-            <td>${requestScope.FORMATTER.format(meal.dateTime)}</td>
+            <td>${FORMATTER.format(meal.dateTime)}</td>
             <td>${meal.description}</td>
             <td>${meal.calories}</td>
             <td><a href="meals?action=edit&mealId=${meal.id}">Update</a></td>

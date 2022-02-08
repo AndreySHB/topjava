@@ -3,8 +3,6 @@ package ru.javawebinar.topjava.web;
 import ru.javawebinar.topjava.dao.InMemoryMealDao;
 import ru.javawebinar.topjava.dao.MealDao;
 import ru.javawebinar.topjava.model.Meal;
-import ru.javawebinar.topjava.model.MealTo;
-import ru.javawebinar.topjava.util.Constants;
 import ru.javawebinar.topjava.util.MealsUtil;
 
 import javax.servlet.ServletException;
@@ -14,15 +12,17 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.Comparator;
-import java.util.List;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 
 public class MealServlet extends HttpServlet {
     private static final String MEAL_JSP = "/meals.jsp";
     private static final String MEAL_EDIT = "/mealEdit.jsp";
     private static final String MEAL_ADD = "/mealAdd.jsp";
     private static final String MEAL_SERVLET = "/meals";
-    private static final MealDao mealDao = new InMemoryMealDao();
+    public static final int CALORIES_PER_DAY = 2000;
+    public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+    private final MealDao mealDao = new InMemoryMealDao();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -45,30 +45,30 @@ public class MealServlet extends HttpServlet {
             getServletContext().getRequestDispatcher(MEAL_ADD).forward(request, response);
             return;
         }
-        request.setAttribute("FORMATTER", Constants.DATE_TIME_FORMATTER);
-        List<MealTo> mealTos = MealsUtil.filteredByStreams(mealDao.getData(), LocalTime.MIN, LocalTime.MAX, Constants.CALORIES_PER_DAY);
-        mealTos.sort(new Comparator<MealTo>() {
-            @Override
-            public int compare(MealTo o1, MealTo o2) {
-                return o1.getDateTime().compareTo(o2.getDateTime());
-            }
-        });
-        request.setAttribute("meals", mealTos);
+        request.setAttribute("FORMATTER", DATE_TIME_FORMATTER);
+        request.setAttribute("meals", MealsUtil.filteredByStreams(mealDao.getAll(), LocalTime.MIN, LocalTime.MAX, CALORIES_PER_DAY));
         getServletContext().getRequestDispatcher(MEAL_JSP).forward(request, response);
     }
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         request.setCharacterEncoding("UTF-8");
-        String sId = request.getParameter("id") == null ? "-999" : request.getParameter("id");
-        int id = Integer.parseInt(sId);
-        LocalDateTime localDateTime = LocalDateTime.parse(request.getParameter("datetime"));
+        LocalDateTime localDateTime = LocalDateTime.now();
+        try {
+            localDateTime = LocalDateTime.parse(request.getParameter("datetime"));
+        } catch (DateTimeParseException ignore) {
+        }
         String description = request.getParameter("description");
-        int calories = Integer.parseInt(request.getParameter("calories"));
+        int calories = 0;
+        try {
+            calories = Math.max(0, Integer.parseInt(request.getParameter("calories")));
+        } catch (NumberFormatException ignore) {
+        }
         Meal meal = new Meal(localDateTime, description, calories);
-        if (id == -999) {
+        if (request.getParameter("id") == null) {
             mealDao.addMeal(meal);
         } else {
+            int id = Integer.parseInt(request.getParameter("id"));
             mealDao.editMeal(id, meal);
         }
         response.sendRedirect(getServletContext().getContextPath() + MEAL_SERVLET);
