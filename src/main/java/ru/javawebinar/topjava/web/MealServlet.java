@@ -22,7 +22,12 @@ public class MealServlet extends HttpServlet {
     private static final String MEAL_SERVLET = "/meals";
     public static final int CALORIES_PER_DAY = 2000;
     public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-    private final MealDao mealDao = new InMemoryMealDao();
+    private MealDao mealDao;
+
+    @Override
+    public void init() {
+        mealDao = new InMemoryMealDao();
+    }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -31,13 +36,13 @@ public class MealServlet extends HttpServlet {
         action = action == null ? "" : action;
         if (action.equalsIgnoreCase("delete")) {
             int mealId = Integer.parseInt(request.getParameter("mealId"));
-            mealDao.removeMeal(mealId);
+            mealDao.remove(mealId);
             response.sendRedirect(getServletContext().getContextPath() + MEAL_SERVLET);
             return;
         }
         if (action.equalsIgnoreCase("edit")) {
             int mealId = Integer.parseInt(request.getParameter("mealId"));
-            request.setAttribute("meal", mealDao.getMeal(mealId));
+            request.setAttribute("meal", mealDao.get(mealId));
             getServletContext().getRequestDispatcher(MEAL_EDIT).forward(request, response);
             return;
         }
@@ -66,10 +71,10 @@ public class MealServlet extends HttpServlet {
         }
         Meal meal = new Meal(localDateTime, description, calories);
         if (request.getParameter("id") == null) {
-            mealDao.addMeal(meal);
+            mealDao.add(meal);
         } else {
             int id = Integer.parseInt(request.getParameter("id"));
-            mealDao.editMeal(id, meal);
+            mealDao.edit(id, meal);
         }
         response.sendRedirect(getServletContext().getContextPath() + MEAL_SERVLET);
     }

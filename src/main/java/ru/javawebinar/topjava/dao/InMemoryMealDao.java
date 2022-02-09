@@ -6,71 +6,51 @@ import java.time.LocalDateTime;
 import java.time.Month;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class InMemoryMealDao implements MealDao {
-    private final Object lock = new Object();
-    private final Object value = new Object();
-    private final AtomicInteger id = new AtomicInteger(0);
-    private final ConcurrentHashMap<Meal, Object> data = new ConcurrentHashMap<>();
+    private final List<Meal> list = new CopyOnWriteArrayList<>();
 
     public InMemoryMealDao() {
-        data.put(new Meal(id.incrementAndGet(), LocalDateTime.of(2020, Month.JANUARY, 30, 10, 0), "Завтрак", 500), value);
-        data.put(new Meal(id.incrementAndGet(), LocalDateTime.of(2020, Month.JANUARY, 30, 13, 0), "Обед", 1000), value);
-        data.put(new Meal(id.incrementAndGet(), LocalDateTime.of(2020, Month.JANUARY, 30, 20, 0), "Ужин", 500), value);
-        data.put(new Meal(id.incrementAndGet(), LocalDateTime.of(2020, Month.JANUARY, 31, 0, 0), "Еда на граничное значение", 100), value);
-        data.put(new Meal(id.incrementAndGet(), LocalDateTime.of(2020, Month.JANUARY, 31, 10, 0), "Завтрак", 1000), value);
-        data.put(new Meal(id.incrementAndGet(), LocalDateTime.of(2020, Month.JANUARY, 31, 13, 0), "Обед", 500), value);
-        data.put(new Meal(id.incrementAndGet(), LocalDateTime.of(2020, Month.JANUARY, 31, 20, 0), "Ужин", 410), value);
+        add(new Meal(LocalDateTime.of(2020, Month.JANUARY, 30, 10, 0), "Завтрак", 500));
+        add(new Meal(LocalDateTime.of(2020, Month.JANUARY, 30, 13, 0), "Обед", 1000));
+        add(new Meal(LocalDateTime.of(2020, Month.JANUARY, 30, 20, 0), "Ужин", 500));
+        add(new Meal(LocalDateTime.of(2020, Month.JANUARY, 31, 0, 0), "Еда на граничное значение", 100));
+        add(new Meal(LocalDateTime.of(2020, Month.JANUARY, 31, 10, 0), "Завтрак", 1000));
+        add(new Meal(LocalDateTime.of(2020, Month.JANUARY, 31, 13, 0), "Обед", 500));
+        add(new Meal(LocalDateTime.of(2020, Month.JANUARY, 31, 20, 0), "Ужин", 410));
     }
-
 
     @Override
     public List<Meal> getAll() {
         List<Meal> meals = new ArrayList<>();
-        for (Meal meal : data.keySet()) {
-            meals.add(new Meal(meal.getId(), meal.getDateTime(), meal.getDescription(), meal.getCalories()));
+        for (int i = 0; i < list.size(); i++) {
+            Meal meal = list.get(i);
+            if (meal != null) {
+                meals.add(new Meal(i + 1, meal.getDateTime(), meal.getDescription(), meal.getCalories()));
+            }
         }
         return meals;
     }
 
     @Override
-    public Meal getMeal(int id) {
-        Meal meal;
-        synchronized (lock) {
-            meal = data.keySet().stream().filter(e -> e.getId() == id).findAny().orElse(null);
-        }
-        if (meal == null) return null;
+    public Meal get(int id) {
+        Meal meal = list.get(id - 1);
         return new Meal(id, meal.getDateTime(), meal.getDescription(), meal.getCalories());
     }
 
     @Override
-    public boolean removeMeal(int id) {
-        Meal meal;
-        synchronized (lock) {
-            meal = data.keySet().stream().filter(e -> e.getId() == id).findAny().orElse(null);
-        }
-        if (meal == null) return false;
-        return data.remove(meal) == value;
+    public Meal remove(int id) {
+        return list.set(id - 1, null);
     }
 
     @Override
-    public Meal editMeal(int id, Meal meal) {
-        synchronized (lock) {
-            removeMeal(id);
-            meal.setId(id);
-            data.put(meal, value);
-        }
-        return meal;
+    public Meal edit(int id, Meal meal) {
+        return list.set(id - 1, meal);
     }
 
     @Override
-    public Meal addMeal(Meal meal) {
-        synchronized (lock) {
-            data.put(meal, value);
-            meal.setId(id.incrementAndGet());
-        }
-        return meal;
+    public void add(Meal meal) {
+        list.add(meal);
     }
 }
