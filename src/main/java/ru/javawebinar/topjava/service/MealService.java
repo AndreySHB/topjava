@@ -20,6 +20,7 @@ public class MealService {
     }
 
     public Meal create(Meal meal, int userId) {
+        meal.setUserId(userId);
         return repository.save(meal, userId);
     }
 
@@ -32,7 +33,7 @@ public class MealService {
         if (meal == null) {
             throw new NotFoundException(String.format("No food with id %d is availible for user with userId = %d", id, userId));
         }
-        return repository.get(id, userId);
+        return meal;
     }
 
     public List<Meal> getAll(int userId) {
@@ -44,6 +45,7 @@ public class MealService {
     }
 
     public void update(Meal meal, int userId) {
+        meal.setUserId(userId);
         checkNotFoundWithId(repository.save(meal, userId), meal.getId());
     }
 }

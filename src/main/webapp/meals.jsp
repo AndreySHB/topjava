@@ -22,7 +22,27 @@
     <hr/>
     <h2>Meals</h2>
     <a href="meals?action=create">Add Meal</a>
-    <br><br>
+
+    <form method="get" action="meals">
+        <dl>
+            <dt>StartDate:</dt>
+            <dd><input type="date" value="${startDate}" name="startDate" required></dd>
+        </dl>
+        <dl>
+            <dt>EndDate:</dt>
+            <dd><input type="date" value="${endDate}" name="endDate" required></dd>
+        </dl>
+        <dl>
+            <dt>StartTime:</dt>
+            <dd><input type="time" value="${startTime}" name="startTime" required></dd>
+        </dl>
+        <dl>
+            <dt>EndTime:</dt>
+            <dd><input type="time" value="${endTime}" name="endTime" required></dd>
+        </dl>
+        <button type="submit">Отфильтровать</button>
+    </form>
+
     <table border="1" cellpadding="8" cellspacing="0">
         <thead>
         <tr>
@@ -45,7 +65,9 @@
                 <td>${meal.description}</td>
                 <td>${meal.calories}</td>
                 <td><a href="meals?action=update&id=${meal.id}">Update</a></td>
-                <td><a href="meals?action=delete&id=${meal.id}">Delete</a></td>
+                <td>
+                    <a href="meals?action=delete&id=${meal.id}&startDate=${startDate}&endDate=${endDate}&startTime=${startTime}&endTime=${endTime}">Delete</a>
+                </td>
             </tr>
         </c:forEach>
     </table>
