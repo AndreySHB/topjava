@@ -27,14 +27,14 @@ public class MealServlet extends HttpServlet {
     private MealRestController mealRestController;
 
     @Override
-    public void init() throws ServletException {
+    public void init() {
         try (ConfigurableApplicationContext appCtx = new ClassPathXmlApplicationContext("spring/spring-app.xml")) {
             mealRestController = appCtx.getBean(MealRestController.class);
         }
     }
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         request.setCharacterEncoding("UTF-8");
         String id = request.getParameter("id");
         Meal meal = new Meal(id.isEmpty() ? null : Integer.valueOf(id),
@@ -47,28 +47,29 @@ public class MealServlet extends HttpServlet {
         } else {
             mealRestController.update(meal);
         }
-        response.sendRedirect("meals");
+        response.sendRedirect("meals?userId=" + getUserId(request));
     }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-
         String action = request.getParameter("action");
         switch (action == null ? "all" : action) {
             case "delete":
                 int id = getId(request);
                 log.info("Delete {}", id);
                 mealRestController.delete(id, getUserId(request));
-                if (request.getParameter("startDate") != null) {
+                if (request.getParameter("startDate") != null && !request.getParameter("startDate").isEmpty()) {
+                    String s = request.getParameter("startDate");
                     log.info("getAllFilteredAfterDelete");
                     setDateTimeAttributes(request);
                     request.getRequestDispatcher("/meals.jsp").forward(request, response);
                     break;
                 }
-                response.sendRedirect("meals");
+                response.sendRedirect("meals?userId=" + getUserId(request));
                 break;
             case "create":
             case "update":
+                request.setAttribute("userId", getUserId(request));
                 final Meal meal = "create".equals(action) ?
                         new Meal(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES), "", 1000) :
                         mealRestController.get(getId(request), getUserId(request));
@@ -77,7 +78,8 @@ public class MealServlet extends HttpServlet {
                 break;
             case "all":
             default:
-                if (request.getParameter("startDate") != null) {
+                request.setAttribute("userId", getUserId(request));
+                if (request.getParameter("startDate") != null && !request.getParameter("startDate").isEmpty()) {
                     log.info("getAllFiltered");
                     setDateTimeAttributes(request);
                     request.getRequestDispatcher("/meals.jsp").forward(request, response);

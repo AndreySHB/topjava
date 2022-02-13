@@ -21,9 +21,10 @@
     <h3><a href="index.html">Home</a></h3>
     <hr/>
     <h2>Meals</h2>
-    <a href="meals?action=create">Add Meal</a>
+    <a href="meals?action=create&userId=${userId}">Add Meal</a>
 
     <form method="get" action="meals">
+        <input type="hidden" name="userId" value="${userId}">
         <dl>
             <dt>StartDate:</dt>
             <dd><input type="date" value="${startDate}" name="startDate" required></dd>
@@ -64,9 +65,9 @@
                 </td>
                 <td>${meal.description}</td>
                 <td>${meal.calories}</td>
-                <td><a href="meals?action=update&id=${meal.id}">Update</a></td>
+                <td><a href="meals?action=update&id=${meal.id}&userId=${userId}">Update</a></td>
                 <td>
-                    <a href="meals?action=delete&id=${meal.id}&startDate=${startDate}&endDate=${endDate}&startTime=${startTime}&endTime=${endTime}">Delete</a>
+                    <a href="meals?action=delete&id=${meal.id}&startDate=${startDate}&endDate=${endDate}&startTime=${startTime}&endTime=${endTime}&userId=${userId}">Delete</a>
                 </td>
             </tr>
         </c:forEach>
