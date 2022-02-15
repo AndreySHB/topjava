@@ -45,9 +45,9 @@ public class MealServlet extends HttpServlet {
         if (meal.isNew()) {
             mealRestController.create(meal);
         } else {
-            mealRestController.update(meal);
+            mealRestController.update(meal, getId(request));
         }
-        response.sendRedirect("meals?userId=" + getUserId(request));
+        response.sendRedirect("meals");
     }
 
     @Override
@@ -57,60 +57,53 @@ public class MealServlet extends HttpServlet {
             case "delete":
                 int id = getId(request);
                 log.info("Delete {}", id);
-                mealRestController.delete(id, getUserId(request));
+                mealRestController.delete(id);
                 if (request.getParameter("startDate") != null && !request.getParameter("startDate").isEmpty()) {
                     String s = request.getParameter("startDate");
                     log.info("getAllFilteredAfterDelete");
-                    setDateTimeAttributes(request);
+                    setNeededAttributes(request);
                     request.getRequestDispatcher("/meals.jsp").forward(request, response);
                     break;
                 }
-                response.sendRedirect("meals?userId=" + getUserId(request));
+                response.sendRedirect("meals");
                 break;
             case "create":
             case "update":
-                request.setAttribute("userId", getUserId(request));
                 final Meal meal = "create".equals(action) ?
                         new Meal(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES), "", 1000) :
-                        mealRestController.get(getId(request), getUserId(request));
+                        mealRestController.get(getId(request));
                 request.setAttribute("meal", meal);
                 request.getRequestDispatcher("/mealForm.jsp").forward(request, response);
                 break;
             case "all":
             default:
-                request.setAttribute("userId", getUserId(request));
                 if (request.getParameter("startDate") != null && !request.getParameter("startDate").isEmpty()) {
                     log.info("getAllFiltered");
-                    setDateTimeAttributes(request);
+                    setNeededAttributes(request);
                     request.getRequestDispatcher("/meals.jsp").forward(request, response);
                     break;
                 }
                 log.info("getAll");
-                request.setAttribute("meals", mealRestController.getAll(getUserId(request)));
+                request.setAttribute("meals", mealRestController.getAll());
                 request.getRequestDispatcher("/meals.jsp").forward(request, response);
                 break;
         }
     }
 
-    private void setDateTimeAttributes(HttpServletRequest request) {
+    private void setNeededAttributes(HttpServletRequest request) {
         LocalDate startDate = LocalDate.parse(request.getParameter("startDate"), df);
         LocalDate endDate = LocalDate.parse(request.getParameter("endDate"), df);
         LocalTime startTime = LocalTime.parse(request.getParameter("startTime"), tf);
         LocalTime endTime = LocalTime.parse(request.getParameter("endTime"), tf);
-        request.setAttribute("startDate", startDate);
+        /*request.setAttribute("startDate", startDate);
         request.setAttribute("endDate", endDate);
         request.setAttribute("startTime", startTime);
-        request.setAttribute("endTime", endTime);
-        request.setAttribute("meals", mealRestController.getAll(getUserId(request), startDate.minusDays(1), endDate.plusDays(1), startTime, endTime.plusMinutes(1)));
+        request.setAttribute("endTime", endTime);*/
+        request.setAttribute("meals", mealRestController.getFilteredByDateTime(startDate.minusDays(1), endDate.plusDays(1), startTime, endTime.plusMinutes(1)));
     }
 
     private int getId(HttpServletRequest request) {
         String paramId = Objects.requireNonNull(request.getParameter("id"));
-        return Integer.parseInt(paramId);
-    }
-
-    private int getUserId(HttpServletRequest request) {
-        String paramId = Objects.requireNonNull(request.getParameter("userId"));
         return Integer.parseInt(paramId);
     }
 }

@@ -5,78 +5,71 @@ import ru.javawebinar.topjava.model.Meal;
 import ru.javawebinar.topjava.repository.MealRepository;
 import ru.javawebinar.topjava.util.MealsUtil;
 
-import java.util.HashMap;
+import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
 @Repository
 public class InMemoryMealRepository implements MealRepository {
-    private final Map<Integer, Meal> data = new HashMap<>();
+    private final Map<Integer, Meal> data = new ConcurrentHashMap<>();
     private final AtomicInteger counter = new AtomicInteger(0);
-    private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
-    private final Lock readLock = rwLock.readLock();
-    private final Lock writeLock = rwLock.writeLock();
 
     {
         for (Meal meal : MealsUtil.meals) {
             meal.setUserId(1);
-            save(meal, 1);
+            save(meal);
+        }
+
+        for (Meal meal : MealsUtil.meals) {
+            Meal meal1 = new Meal(meal.getDateTime(), meal.getDescription() + " forUser2", meal.getCalories());
+            meal1.setUserId(2);
+            save(meal1);
         }
     }
 
     @Override
-    public Meal save(Meal meal, int userId) {
-        if (meal.getUserId() == userId) {
-            try {
-                writeLock.lock();
-                if (meal.isNew()) {
-                    meal.setId(counter.incrementAndGet());
-                    data.put(meal.getId(), meal);
-                    return meal;
-                }
-                return data.computeIfPresent(meal.getId(), (id, oldMeal) -> meal);
-            } finally {
-                writeLock.unlock();
-            }
+    public Meal save(Meal meal) {
+        if (meal.isNew()) {
+            meal.setId(counter.incrementAndGet());
+            data.put(meal.getId(), meal);
+            return meal;
         }
-        return null;
+        Meal oldValue = data.get(meal.getId());
+        return (oldValue != null && oldValue.getUserId() == meal.getUserId()) ? data.put(meal.getId(), meal) : null;
     }
 
     @Override
     public boolean delete(int id, int userId) {
-        writeLock.lock();
-        try {
-            return data.get(id) != null && data.get(id).getUserId() == userId && data.remove(id) != null;
-        } finally {
-            writeLock.unlock();
-        }
+        Meal meal = data.get(id);
+        return meal != null && meal.getUserId() == userId && data.remove(id) != null;
     }
 
     @Override
     public Meal get(int id, int userId) {
-        readLock.lock();
-        try {
-            Meal meal = data.get(id);
-            return (meal != null && meal.getUserId() == userId) ? meal : null;
-        } finally {
-            readLock.unlock();
-        }
+        Meal meal = data.get(id);
+        return (meal != null && meal.getUserId() == userId) ? meal : null;
     }
 
     @Override
     public List<Meal> getAll(int userId) {
-        readLock.lock();
-        try {
-            return data.values().stream().filter(meal -> meal.getUserId() == userId)
-                    .sorted((o1, o2) -> o2.getDateTime().compareTo(o1.getDateTime())).collect(Collectors.toList());
-        } finally {
-            readLock.unlock();
-        }
+        return data.values()
+                .stream()
+                .filter(meal -> meal.getUserId() == userId)
+                .sorted(Comparator.comparing(Meal::getDateTime).reversed())
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Meal> getFilteredByDate(int userId, LocalDate startDate, LocalDate endDate) {
+        return data.values()
+                .stream()
+                .filter(meal -> (meal.getUserId() == userId) && (meal.getDate().isAfter(startDate) && meal.getDate().isBefore(endDate)))
+                .sorted(Comparator.comparing(Meal::getDateTime).reversed())
+                .collect(Collectors.toList());
     }
 }
 
