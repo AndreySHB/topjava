@@ -28,35 +28,35 @@ public class MealRestController {
     }
 
     public List<MealTo> getAll() {
-        log.trace("getAll");
+        log.info("getAll");
         return MealsUtil.getTos(service.getAll(SecurityUtil.authUserId()), SecurityUtil.authUserCaloriesPerDay());
     }
 
     public List<MealTo> getFilteredByDateTime(LocalDate startDate, LocalDate endDate, LocalTime startTime, LocalTime endTime) {
-        log.trace("getAll");
+        log.info("getAll");
         return MealsUtil.filterByPredicate(service.getFilteredByDate(SecurityUtil.authUserId(), startDate, endDate), SecurityUtil.authUserCaloriesPerDay(),
                 meal1 -> DateTimeUtil.isBetweenHalfOpen(meal1.getTime(), startTime, endTime));
     }
 
     public void create(Meal meal) {
-        log.trace("create");
+        log.info("create");
         checkNew(meal);
         service.create(meal, SecurityUtil.authUserId());
     }
 
     public void update(Meal meal, int id) {
-        log.trace("update");
+        log.info("update");
         assureIdConsistent(meal, id);
         service.update(meal, SecurityUtil.authUserId());
     }
 
     public Meal get(int id) {
-        log.trace("get");
+        log.info("get");
         return service.get(id, SecurityUtil.authUserId());
     }
 
     public void delete(int id) {
-        log.trace("delete");
+        log.info("delete");
         service.delete(id, SecurityUtil.authUserId());
     }
 }

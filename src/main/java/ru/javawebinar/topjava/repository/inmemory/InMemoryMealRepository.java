@@ -5,71 +5,69 @@ import ru.javawebinar.topjava.model.Meal;
 import ru.javawebinar.topjava.repository.MealRepository;
 import ru.javawebinar.topjava.util.MealsUtil;
 
-import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Repository
 public class InMemoryMealRepository implements MealRepository {
-    private final Map<Integer, Meal> data = new ConcurrentHashMap<>();
+    private final Map<Integer, Map<Integer, Meal>> data = new ConcurrentHashMap<>();
     private final AtomicInteger counter = new AtomicInteger(0);
 
     {
         for (Meal meal : MealsUtil.meals) {
-            meal.setUserId(1);
-            save(meal);
+            save(meal, 1);
         }
 
         for (Meal meal : MealsUtil.meals) {
-            Meal meal1 = new Meal(meal.getDateTime(), meal.getDescription() + " forUser2", meal.getCalories());
-            meal1.setUserId(2);
-            save(meal1);
+            Meal mealForUser2 = new Meal(meal.getDateTime(), meal.getDescription() + " forUser2", meal.getCalories());
+            save(mealForUser2, 2);
         }
     }
 
     @Override
-    public Meal save(Meal meal) {
+    public Meal save(Meal meal, int userId) {
+        Map<Integer, Meal> userData = getUserData(userId);
         if (meal.isNew()) {
             meal.setId(counter.incrementAndGet());
-            data.put(meal.getId(), meal);
+            userData.put(meal.getId(), meal);
             return meal;
         }
-        Meal oldValue = data.get(meal.getId());
-        return (oldValue != null && oldValue.getUserId() == meal.getUserId()) ? data.put(meal.getId(), meal) : null;
+        if (userData.get(meal.getId()) == null) return null;
+        userData.put(meal.getId(), meal);
+        return meal;
     }
 
     @Override
     public boolean delete(int id, int userId) {
-        Meal meal = data.get(id);
-        return meal != null && meal.getUserId() == userId && data.remove(id) != null;
+        return getUserData(userId).remove(id) != null;
     }
 
     @Override
     public Meal get(int id, int userId) {
-        Meal meal = data.get(id);
-        return (meal != null && meal.getUserId() == userId) ? meal : null;
+        return getUserData(userId).get(id);
     }
 
     @Override
-    public List<Meal> getAll(int userId) {
-        return data.values()
+    public List<Meal> getAll(int userId, Predicate<Meal> filter) {
+        return getUserData(userId).values()
                 .stream()
-                .filter(meal -> meal.getUserId() == userId)
+                .filter(filter != null ? filter : meal -> true)
                 .sorted(Comparator.comparing(Meal::getDateTime).reversed())
                 .collect(Collectors.toList());
     }
 
-    @Override
-    public List<Meal> getFilteredByDate(int userId, LocalDate startDate, LocalDate endDate) {
-        return data.values()
-                .stream()
-                .filter(meal -> (meal.getUserId() == userId) && (meal.getDate().isAfter(startDate) && meal.getDate().isBefore(endDate)))
-                .sorted(Comparator.comparing(Meal::getDateTime).reversed())
-                .collect(Collectors.toList());
+    private Map<Integer, Meal> getUserData(int userId) {
+        Map<Integer, Meal> userData = data.get(userId);
+        if (userData == null) {
+            userData = new ConcurrentHashMap<>();
+            data.put(userId, userData);
+        }
+        return userData;
     }
 }
 
