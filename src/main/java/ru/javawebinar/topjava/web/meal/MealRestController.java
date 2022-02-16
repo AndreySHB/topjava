@@ -18,7 +18,8 @@ import static ru.javawebinar.topjava.util.ValidationUtil.checkNew;
 
 @Controller
 public class MealRestController {
-    protected final Logger log = LoggerFactory.getLogger(getClass());
+
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final MealService service;
 
@@ -33,12 +34,8 @@ public class MealRestController {
 
     public List<MealTo> getFilteredByDateTime(LocalDate startDate, LocalDate endDate, LocalTime startTime, LocalTime endTime) {
         log.info("getAll");
-        startDate = startDate != null ? startDate : LocalDate.of(1990, 1, 1);
-        endDate = endDate != null ? endDate : LocalDate.of(2990, 1, 1);
-        LocalTime finalStartTime = startTime != null ? startTime : LocalTime.of(0, 0);
-        LocalTime finalEndTime = endTime != null ? endTime : LocalTime.of(23, 59,1);
         return MealsUtil.getFilteredTos(service.getFilteredByDate(SecurityUtil.authUserId(), startDate, endDate),
-                SecurityUtil.authUserCaloriesPerDay(), finalStartTime, finalEndTime);
+                SecurityUtil.authUserCaloriesPerDay(), startTime, endTime);
     }
 
     public void create(Meal meal) {

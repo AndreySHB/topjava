@@ -35,7 +35,6 @@ public class MealServlet extends HttpServlet {
 
     @Override
     public void destroy() {
-        super.destroy();
         appCtx.close();
     }
 
@@ -89,25 +88,26 @@ public class MealServlet extends HttpServlet {
         LocalDate startDate = null;
         try {
             startDate = LocalDate.parse(request.getParameter("startDate"), df);
-            startDate = startDate.minusDays(1);
-        } catch (Exception ignore) {
+        } catch (RuntimeException e) {
+            log.warn(e.getMessage());
         }
         LocalDate endDate = null;
         try {
             endDate = LocalDate.parse(request.getParameter("endDate"), df);
-            endDate = endDate.plusDays(1);
-        } catch (Exception ignore) {
+        } catch (RuntimeException e) {
+            log.warn(e.getMessage());
         }
         LocalTime startTime = null;
         try {
             startTime = LocalTime.parse(request.getParameter("startTime"), tf);
-        } catch (Exception ignore) {
+        } catch (RuntimeException e) {
+            log.warn(e.getMessage());
         }
         LocalTime endTime = null;
         try {
             endTime = LocalTime.parse(request.getParameter("endTime"), tf);
-            endTime = endTime.plusSeconds(1);
-        } catch (Exception ignore) {
+        } catch (RuntimeException e) {
+            log.warn(e.getMessage());
         }
         request.setAttribute("meals", mealRestController.getFilteredByDateTime(startDate, endDate, startTime, endTime));
     }

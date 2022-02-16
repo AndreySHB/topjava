@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -62,12 +63,7 @@ public class InMemoryMealRepository implements MealRepository {
     }
 
     private Map<Integer, Meal> getUserData(int userId) {
-        Map<Integer, Meal> userData = data.get(userId);
-        if (userData == null) {
-            userData = new ConcurrentHashMap<>();
-            data.put(userId, userData);
-        }
-        return userData;
+        return data.computeIfAbsent(userId, integer -> new ConcurrentHashMap<>());
     }
 }
 
