@@ -21,7 +21,7 @@
     <h3><a href="index.html">Home</a></h3>
     <hr/>
     <h2>Meals</h2>
-    <a href="meals?action=create<%--&startDate=${param.startDate}&endDate=${param.endDate}&startTime=${param.startTime}&endTime=${param.endTime}--%>">Add Meal</a>
+    <a href="meals?action=create&startDate=${param.startDate}&endDate=${param.endDate}&startTime=${param.startTime}&endTime=${param.endTime}">Add Meal</a>
 
     <form method="get" action="meals">
         <dl>
@@ -65,7 +65,7 @@
                 <td>${meal.description}</td>
                 <td>${meal.calories}</td>
                 <td>
-                    <a href="meals?action=update&id=${meal.id}<%--&startDate=${param.startDate}&endDate=${param.endDate}&startTime=${param.startTime}&endTime=${param.endTime}--%>">Update</a>
+                    <a href="meals?action=update&id=${meal.id}&startDate=${param.startDate}&endDate=${param.endDate}&startTime=${param.startTime}&endTime=${param.endTime}">Update</a>
                 </td>
                 <td>
                     <a href="meals?action=delete&id=${meal.id}&startDate=${param.startDate}&endDate=${param.endDate}&startTime=${param.startTime}&endTime=${param.endTime}">Delete</a>
