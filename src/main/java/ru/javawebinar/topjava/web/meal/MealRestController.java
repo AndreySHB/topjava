@@ -34,8 +34,12 @@ public class MealRestController {
 
     public List<MealTo> getFilteredByDateTime(LocalDate startDate, LocalDate endDate, LocalTime startTime, LocalTime endTime) {
         log.info("getAll");
+        startDate = startDate != null ? startDate : LocalDate.of(1990, 1, 1);
+        endDate = endDate != null ? endDate : LocalDate.of(2990, 1, 1);
+        LocalTime finalStartTime = startTime != null ? startTime : LocalTime.of(0, 0);
+        LocalTime finalEndTime = endTime != null ? endTime : LocalTime.of(23, 59);
         return MealsUtil.filterByPredicate(service.getFilteredByDate(SecurityUtil.authUserId(), startDate, endDate), SecurityUtil.authUserCaloriesPerDay(),
-                meal1 -> DateTimeUtil.isBetweenHalfOpen(meal1.getTime(), startTime, endTime));
+                meal1 -> DateTimeUtil.isBetweenHalfOpen(meal1.getTime(), finalStartTime, finalEndTime));
     }
 
     public void create(Meal meal) {

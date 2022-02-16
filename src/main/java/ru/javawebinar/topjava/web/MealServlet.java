@@ -58,14 +58,15 @@ public class MealServlet extends HttpServlet {
                 int id = getId(request);
                 log.info("Delete {}", id);
                 mealRestController.delete(id);
-                if (request.getParameter("startDate") != null && !request.getParameter("startDate").isEmpty()) {
-                    String s = request.getParameter("startDate");
+                /*if (request.getParameter("startDate") != null && !request.getParameter("startDate").isEmpty()) {
                     log.info("getAllFilteredAfterDelete");
                     setNeededAttributes(request);
                     request.getRequestDispatcher("/meals.jsp").forward(request, response);
                     break;
-                }
-                response.sendRedirect("meals");
+                }*/
+                setNeededAttributes(request);
+                request.getRequestDispatcher("/meals.jsp").forward(request, response);
+                //response.sendRedirect("meals");
                 break;
             case "create":
             case "update":
@@ -77,29 +78,45 @@ public class MealServlet extends HttpServlet {
                 break;
             case "all":
             default:
-                if (request.getParameter("startDate") != null && !request.getParameter("startDate").isEmpty()) {
+                /*if (request.getParameter("startDate") != null && !request.getParameter("startDate").isEmpty()) {
                     log.info("getAllFiltered");
                     setNeededAttributes(request);
                     request.getRequestDispatcher("/meals.jsp").forward(request, response);
                     break;
-                }
+                }*/
+                setNeededAttributes(request);
                 log.info("getAll");
-                request.setAttribute("meals", mealRestController.getAll());
+                //request.setAttribute("meals", mealRestController.getAll());
                 request.getRequestDispatcher("/meals.jsp").forward(request, response);
                 break;
         }
     }
 
     private void setNeededAttributes(HttpServletRequest request) {
-        LocalDate startDate = LocalDate.parse(request.getParameter("startDate"), df);
-        LocalDate endDate = LocalDate.parse(request.getParameter("endDate"), df);
-        LocalTime startTime = LocalTime.parse(request.getParameter("startTime"), tf);
-        LocalTime endTime = LocalTime.parse(request.getParameter("endTime"), tf);
-        /*request.setAttribute("startDate", startDate);
-        request.setAttribute("endDate", endDate);
-        request.setAttribute("startTime", startTime);
-        request.setAttribute("endTime", endTime);*/
-        request.setAttribute("meals", mealRestController.getFilteredByDateTime(startDate.minusDays(1), endDate.plusDays(1), startTime, endTime.plusMinutes(1)));
+        LocalDate startDate = null;
+        try {
+            startDate = LocalDate.parse(request.getParameter("startDate"), df);
+            startDate = startDate.minusDays(1);
+        } catch (Exception ignore) {
+        }
+        LocalDate endDate = null;
+        try {
+            endDate = LocalDate.parse(request.getParameter("endDate"), df);
+            endDate = endDate.plusDays(1);
+        } catch (Exception ignore) {
+        }
+        LocalTime startTime = null;
+        try {
+            startTime = LocalTime.parse(request.getParameter("startTime"), tf);
+        } catch (Exception ignore) {
+        }
+        LocalTime endTime = null;
+        try {
+            endTime = LocalTime.parse(request.getParameter("endTime"), tf);
+            endTime = endTime.plusMinutes(1);
+        } catch (Exception ignore) {
+        }
+        request.setAttribute("meals", mealRestController.getFilteredByDateTime(startDate, endDate, startTime, endTime));
     }
 
     private int getId(HttpServletRequest request) {

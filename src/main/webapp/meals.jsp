@@ -21,24 +21,24 @@
     <h3><a href="index.html">Home</a></h3>
     <hr/>
     <h2>Meals</h2>
-    <a href="meals?action=create">Add Meal</a>
+    <a href="meals?action=create<%--&startDate=${param.startDate}&endDate=${param.endDate}&startTime=${param.startTime}&endTime=${param.endTime}--%>">Add Meal</a>
 
     <form method="get" action="meals">
         <dl>
             <dt>StartDate:</dt>
-            <dd><input type="date" value="${startDate}" name="startDate" required></dd>
+            <dd><input type="date" value="${param.startDate}" name="startDate"></dd>
         </dl>
         <dl>
             <dt>EndDate:</dt>
-            <dd><input type="date" value="${endDate}" name="endDate" required></dd>
+            <dd><input type="date" value="${param.endDate}" name="endDate"></dd>
         </dl>
         <dl>
             <dt>StartTime:</dt>
-            <dd><input type="time" value="${startTime}" name="startTime" required></dd>
+            <dd><input type="time" value="${param.startTime}" name="startTime"></dd>
         </dl>
         <dl>
             <dt>EndTime:</dt>
-            <dd><input type="time" value="${endTime}" name="endTime" required></dd>
+            <dd><input type="time" value="${param.endTime}" name="endTime"></dd>
         </dl>
         <button type="submit">Отфильтровать</button>
     </form>
@@ -64,9 +64,11 @@
                 </td>
                 <td>${meal.description}</td>
                 <td>${meal.calories}</td>
-                <td><a href="meals?action=update&id=${meal.id}">Update</a></td>
                 <td>
-                    <a href="meals?action=delete&id=${meal.id}&startDate=${startDate}&endDate=${endDate}&startTime=${startTime}&endTime=${endTime}">Delete</a>
+                    <a href="meals?action=update&id=${meal.id}<%--&startDate=${param.startDate}&endDate=${param.endDate}&startTime=${param.startTime}&endTime=${param.endTime}--%>">Update</a>
+                </td>
+                <td>
+                    <a href="meals?action=delete&id=${meal.id}&startDate=${param.startDate}&endDate=${param.endDate}&startTime=${param.startTime}&endTime=${param.endTime}">Delete</a>
                 </td>
             </tr>
         </c:forEach>
