@@ -21,6 +21,9 @@
         <!-- Logging -->
         <logback.version>1.2.10</logback.version>
         <slf4j.version>1.7.35</slf4j.version>
+
+        <!--    Tests  -->
+        <junit.version>4.13.2</junit.version>
     </properties>
 
     <build>
@@ -38,14 +41,10 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.7.0</version>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.22.2</version>
                 <configuration>
-                    <release>9</release>
-                    <compilerArgs>
-                        <arg>--add-modules</arg>
-                        <arg>java.xml.ws.annotation</arg>
-                    </compilerArgs>
+                    <argLine>-Dfile.encoding=UTF-8</argLine>
                 </configuration>
             </plugin>
         </plugins>
@@ -86,6 +85,19 @@
             <groupId>javax.servlet</groupId>
             <artifactId>jstl</artifactId>
             <version>1.2</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.annotation</groupId>
+            <artifactId>javax.annotation-api</artifactId>
+            <version>1.3.2</version>
+        </dependency>
+
+        <!--Test-->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
