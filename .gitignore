@@ -5,6 +5,7 @@ target
 log
 *.patch
 patches
+src/main/resources/db/postgres.properties
 
 
 /lib/javax.annotation.jar
