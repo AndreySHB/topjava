@@ -5,13 +5,8 @@ target
 log
 *.patch
 patches
+lib
 src/main/resources/db/postgres.properties
 
 
-/lib/javax.annotation.jar
-/lib/javax.ejb.jar
-/lib/javax.jms.jar
-/lib/javax.persistence.jar
-/lib/javax.resource.jar
-/lib/javax.servlet.jsp.jar
-/lib/javax.transaction.jar
+
