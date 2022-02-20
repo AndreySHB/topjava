@@ -14,9 +14,15 @@ public class MealTestData {
     public static final int USER_ID = START_SEQ;
     public static final int ADMIN_ID = START_SEQ + 1;
     public static final int USERMEAL_ID = START_SEQ + 3;
+    public static final int USERMEAL_ID2 = USERMEAL_ID + 1;
+    public static final int USERMEAL_ID3 = USERMEAL_ID2 + 1;
     public static final int NOT_EXISTED = 55;
     public static final LocalDateTime DATE = DateTimeUtil.parseDate("2022-05-16 10:04");
+    public static final LocalDateTime DATE2 = DateTimeUtil.parseDate("2022-05-17 15:04");
+    public static final LocalDateTime DATE3 = DateTimeUtil.parseDate("2022-05-17 19:04");
     public static final Meal userMeal = new Meal(USERMEAL_ID, DATE, "макароны с сыром", 1200);
+    public static final Meal userMeal2 = new Meal(USERMEAL_ID2, DATE2, "печенка с ананасом", 795);
+    public static final Meal userMeal3 = new Meal(USERMEAL_ID3, DATE3, "жаренный круассан", 500);
 
 
     public static void assertMatch(Meal actual, Meal expected) {
