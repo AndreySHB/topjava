@@ -82,8 +82,8 @@ public class MealServiceTest {
     @Test
     public void update() {
         Meal updated = getUpdated();
-        service.update(updated, USER_ID);
-        assertMatch(service.get(updated.getId(), USER_ID), updated);
+        service.update(getUpdated(), USER_ID);
+        assertMatch(service.get(updated.getId(), USER_ID), getUpdated());
     }
 
     @Test
@@ -106,7 +106,7 @@ public class MealServiceTest {
     @Test
     public void createNotUniqDate() {
         Meal newMeal = getNew();
-        newMeal.setDate(DATE);
+        newMeal.setDateTime(DATE);
         assertThrows(DataAccessException.class, () -> service.create(newMeal, USER_ID));
     }
 }

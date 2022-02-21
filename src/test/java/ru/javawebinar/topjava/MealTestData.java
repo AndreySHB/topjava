@@ -1,14 +1,11 @@
 package ru.javawebinar.topjava;
 
 import ru.javawebinar.topjava.model.Meal;
-import ru.javawebinar.topjava.model.Role;
-import ru.javawebinar.topjava.model.User;
 import ru.javawebinar.topjava.util.DateTimeUtil;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
+import java.util.Iterator;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static ru.javawebinar.topjava.model.AbstractBaseEntity.START_SEQ;
@@ -20,7 +17,7 @@ public class MealTestData {
     public static final int USERMEAL_ID2 = USERMEAL_ID + 1;
     public static final int USERMEAL_ID3 = USERMEAL_ID2 + 1;
     public static final int NOT_EXISTED = 55;
-    public static final int FOREIGN_FOOD_ID = 100006;
+    public static final int FOREIGN_FOOD_ID = START_SEQ + 6;
     public static final LocalDateTime DATE = DateTimeUtil.parseDate("2022-05-16 10:04");
     public static final LocalDateTime DATE2 = DateTimeUtil.parseDate("2022-05-17 15:04");
     public static final LocalDateTime DATE3 = DateTimeUtil.parseDate("2022-05-17 19:04");
@@ -38,12 +35,16 @@ public class MealTestData {
     }
 
     public static void assertMatch(Iterable<Meal> actual, Iterable<Meal> expected) {
-        assertThat(actual).isEqualTo(expected);
+        Iterator<Meal> actualIterator = actual.iterator();
+        Iterator<Meal> expectedIterator = expected.iterator();
+        while (actualIterator.hasNext()) {
+            assertMatch(actualIterator.next(), expectedIterator.next());
+        }
     }
 
     public static Meal getUpdated() {
         Meal updated = new Meal(userMeal);
-        updated.setDate(DATE.plusDays(4));
+        updated.setDateTime(DATE.plusDays(4));
         updated.setCalories(100);
         updated.setDescription("макароны с сыром updated");
         return updated;

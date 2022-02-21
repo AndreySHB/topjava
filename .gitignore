@@ -6,7 +6,7 @@ log
 *.patch
 patches
 lib
-src/main/resources/db/postgres.properties
+
 
 
 

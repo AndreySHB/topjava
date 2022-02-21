@@ -16,7 +16,7 @@
         <input type="hidden" name="id" value="${meal.id}">
         <dl>
             <dt>DateTime:</dt>
-            <dd><input type="datetime-local" value="${meal.date}" name="date" required></dd>
+            <dd><input type="datetime-local" value="${meal.dateTime}" name="date" required></dd>
         </dl>
         <dl>
             <dt>Description:</dt>
