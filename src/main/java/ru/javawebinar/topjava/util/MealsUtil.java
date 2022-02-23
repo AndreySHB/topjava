@@ -32,19 +32,19 @@ public class MealsUtil {
     }
 
     public static List<MealTo> getFilteredTos(Collection<Meal> meals, int caloriesPerDay, LocalTime startTime, LocalTime endTime) {
-        return filterByPredicate(meals, caloriesPerDay, meal -> Util.isBetweenHalfOpen(meal.getOnlyTime(), startTime, endTime));
+        return filterByPredicate(meals, caloriesPerDay, meal -> Util.isBetweenHalfOpen(meal.getTime(), startTime, endTime));
     }
 
     public static List<MealTo> filterByPredicate(Collection<Meal> meals, int caloriesPerDay, Predicate<Meal> filter) {
         Map<LocalDate, Integer> caloriesSumByDate = meals.stream()
                 .collect(
-                        Collectors.groupingBy(Meal::getOnlyDate, Collectors.summingInt(Meal::getCalories))
+                        Collectors.groupingBy(Meal::getDate, Collectors.summingInt(Meal::getCalories))
 //                      Collectors.toMap(Meal::getDate, Meal::getCalories, Integer::sum)
                 );
 
         return meals.stream()
                 .filter(filter)
-                .map(meal -> createTo(meal, caloriesSumByDate.get(meal.getOnlyDate()) > caloriesPerDay))
+                .map(meal -> createTo(meal, caloriesSumByDate.get(meal.getDate()) > caloriesPerDay))
                 .collect(Collectors.toList());
     }
 

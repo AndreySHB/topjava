@@ -35,11 +35,7 @@ public class MealTestData {
     }
 
     public static void assertMatch(Iterable<Meal> actual, Iterable<Meal> expected) {
-        Iterator<Meal> actualIterator = actual.iterator();
-        Iterator<Meal> expectedIterator = expected.iterator();
-        while (actualIterator.hasNext()) {
-            assertMatch(actualIterator.next(), expectedIterator.next());
-        }
+        assertThat(actual).usingRecursiveFieldByFieldElementComparator().isEqualTo(expected);
     }
 
     public static Meal getUpdated() {
