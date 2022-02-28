@@ -1,24 +1,31 @@
 package ru.javawebinar.topjava.model;
 
 import javax.persistence.*;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Entity
-@Table(name = "meals")
+@Table(name = "meals", uniqueConstraints = @UniqueConstraint(columnNames = {"date_time", "user_id"}, name = "uk_mealdatetime_user"))
 public class Meal extends AbstractBaseEntity {
 
     @Column(name = "date_time", nullable = false)
+    @NotNull
     private LocalDateTime dateTime;
 
     @Column(name = "description", nullable = false)
+    @NotNull
     private String description;
 
-    @Column(name = "calories", nullable = false, columnDefinition = "int default 0")
+    @Column(name = "calories", nullable = false)
+    @Min(0)
     private int calories;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @NotNull
+    @JoinColumn(name = "user_id")
     private User user;
 
     public Meal() {

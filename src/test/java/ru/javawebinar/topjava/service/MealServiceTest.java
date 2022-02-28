@@ -1,9 +1,10 @@
 package ru.javawebinar.topjava.service;
 
+import org.junit.AfterClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Stopwatch;
 import org.junit.rules.TestRule;
-import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -33,25 +34,31 @@ import static ru.javawebinar.topjava.UserTestData.USER_ID;
 @Sql(scripts = "classpath:db/populateDB.sql", config = @SqlConfig(encoding = "UTF-8"))
 public class MealServiceTest {
     private static final Logger log = getLogger(MealServiceTest.class);
+    private static long overalltime = 0L;
 
     @Autowired
     private MealService service;
 
     @Rule
-    public TestRule myRule = new TestWatcher() {
-        long start, end;
+    public TestRule myRule = new Stopwatch() {
 
         @Override
-        protected void starting(Description description) {
-            start = System.currentTimeMillis();
+        protected void succeeded(long nanos, Description description) {
+            log.info(String.format("Test: %s succeeded, execution time - %d ns", description.getMethodName(), nanos));
+            overalltime += nanos;
         }
 
         @Override
-        protected void finished(Description description) {
-            end = System.currentTimeMillis();
-            log.info(String.format("Test: " + description.getMethodName() + ", execution time: %d ms", end - start));
+        protected void failed(long nanos, Throwable e, Description description) {
+            log.warn(String.format("Test: %s failed, execution time - %d ns", description.getMethodName(), nanos));
+            overalltime += nanos;
         }
     };
+
+    @AfterClass
+    public static void afterClass() {
+        log.info(String.format("%s: execution time for all tests - %d ns", MealServiceTest.class.getSimpleName(), overalltime));
+    }
 
     @Test
     public void delete() {
