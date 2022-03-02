@@ -1,7 +1,9 @@
 package ru.javawebinar.topjava.model;
 
 import javax.persistence.*;
+import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -14,7 +16,7 @@ import java.time.LocalTime;
                 " AND m.dateTime >= :startdatetime AND m.dateTime< :enddatetime ORDER BY m.dateTime DESC")
 })
 @Entity
-@Table(name = "meals", uniqueConstraints = @UniqueConstraint(columnNames = {"date_time", "user_id"}, name = "uk_mealdatetime_user"))
+@Table(name = "meals", uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "date_time"}, name = "uk_mealdatetime_user"))
 public class Meal extends AbstractBaseEntity {
 
     public static final String DELETE = "Meal.delete";
@@ -26,16 +28,17 @@ public class Meal extends AbstractBaseEntity {
     private LocalDateTime dateTime;
 
     @Column(name = "description", nullable = false)
-    @NotNull
+    @NotBlank
+    @Max(120)
     private String description;
 
     @Column(name = "calories", nullable = false)
-    @Min(0)
+    @Min(10)
     private int calories;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @NotNull
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id" ,nullable = false)
     private User user;
 
     public Meal() {
