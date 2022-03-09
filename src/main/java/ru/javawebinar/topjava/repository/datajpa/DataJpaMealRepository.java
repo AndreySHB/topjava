@@ -26,10 +26,7 @@ public class DataJpaMealRepository implements MealRepository {
     @Transactional
     public Meal save(Meal meal, int userId) {
         meal.setUser(crudUserRepository.getById(userId));
-        if (meal.isNew() || crudRepository.getByIdAndUserId(meal.id(), userId) != null) {
-            return crudRepository.save(meal);
-        }
-        return null;
+        return (meal.isNew() || crudRepository.getByIdAndUserId(meal.id(), userId) != null) ? crudRepository.save(meal) : null;
     }
 
     @Override
