@@ -5,12 +5,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import ru.javawebinar.topjava.model.Meal;
 import ru.javawebinar.topjava.service.MealService;
+import ru.javawebinar.topjava.to.MealTo;
 import ru.javawebinar.topjava.util.MealsUtil;
 
 import javax.servlet.http.HttpServletRequest;
@@ -22,7 +22,6 @@ import java.util.List;
 
 import static ru.javawebinar.topjava.util.DateTimeUtil.parseLocalDate;
 import static ru.javawebinar.topjava.util.DateTimeUtil.parseLocalTime;
-import static ru.javawebinar.topjava.util.ValidationUtil.checkNew;
 
 @Controller
 public class JspMealController {
@@ -42,12 +41,14 @@ public class JspMealController {
     @GetMapping("/meals/update/{id}")
     public String getCreateMenuMeal(Model model, @PathVariable("id") int id) {
         final int userId = SecurityUtil.authUserId();
+        log.info("goto update menu for meal {} user {}", id, userId);
         model.addAttribute("meal", service.get(id, userId));
         return "mealForm";
     }
 
     @GetMapping("/meals/create")
     public String getUpdateMenuMeal(Model model) {
+        log.info("goto create menu for user {}", SecurityUtil.authUserId());
         final Meal meal = new Meal(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES), "", 1000);
         model.addAttribute("meal", meal);
         return "mealForm";
@@ -63,35 +64,44 @@ public class JspMealController {
             LocalTime endTime = parseLocalTime(request.getParameter("endTime"));
             log.info("getAll filtered for user {}", userId);
             List<Meal> mealsDateFiltered = service.getBetweenInclusive(startDate, endDate, userId);
-            model.addAttribute("meals",
-                    MealsUtil.getFilteredTos(mealsDateFiltered,
-                            SecurityUtil.authUserCaloriesPerDay(), startTime, endTime));
+            putMealTos(model, MealsUtil.getFilteredTos(mealsDateFiltered,
+                    SecurityUtil.authUserCaloriesPerDay(), startTime, endTime));
             return "meals";
         }
         log.info("getAll for user {}", userId);
-        model.addAttribute("meals",
-                MealsUtil.getTos(service.getAll(userId), SecurityUtil.authUserCaloriesPerDay()));
+        putMealTos(model, MealsUtil.getTos(service.getAll(userId), SecurityUtil.authUserCaloriesPerDay()));
         return "meals";
     }
 
-    @PostMapping("/meals")
-    public String setMeal(Model model, HttpServletRequest request) {
+    @PostMapping("/meals/meals")
+    public String createMeal(Model model, HttpServletRequest request) {
         int userId = SecurityUtil.authUserId();
-        final int caloriesPerDay = SecurityUtil.authUserCaloriesPerDay();
         Meal meal = new Meal(
                 LocalDateTime.parse(request.getParameter("dateTime")),
                 request.getParameter("description"),
                 Integer.parseInt(request.getParameter("calories")));
-
-        if (StringUtils.hasLength(request.getParameter("id"))) {
-            //assureIdConsistent(meal, getId(request));
-            service.update(meal, userId);
-        } else {
-            checkNew(meal);
-            service.create(meal, userId);
-        }
-        model.addAttribute("meals",
-                MealsUtil.getTos(service.getAll(userId), caloriesPerDay));
+        log.info("create new meal for user {}", userId);
+        service.create(meal, userId);
+        putMealTos(model, MealsUtil.getTos(service.getAll(userId), SecurityUtil.authUserCaloriesPerDay()));
         return "redirect:/meals";
+    }
+
+    @PostMapping("meals/update/meals")
+    public String updateMeal(Model model, HttpServletRequest request) {
+        int userId = SecurityUtil.authUserId();
+        int id = Integer.parseInt(request.getParameter("id"));
+        Meal meal = new Meal(
+                id,
+                LocalDateTime.parse(request.getParameter("dateTime")),
+                request.getParameter("description"),
+                Integer.parseInt(request.getParameter("calories")));
+        log.info("update meal {} for user {}", id, userId);
+        service.update(meal, userId);
+        putMealTos(model, MealsUtil.getTos(service.getAll(userId), SecurityUtil.authUserCaloriesPerDay()));
+        return "redirect:/meals";
+    }
+
+    private void putMealTos(Model model, List<MealTo> meals) {
+        model.addAttribute("meals", meals);
     }
 }
