@@ -7,11 +7,11 @@
     <link rel="stylesheet" href="resources/css/style.css">
 </head>
 <body>
+<jsp:useBean id="meal" type="ru.javawebinar.topjava.model.Meal" scope="request"/>
 <section>
-    <h3><a href="index.jsp">Home</a></h3>
+    <h3><a href="/topjava/index.jsp">Home</a></h3>
     <hr>
-    <h2>${param.action == 'create' ? 'Create meal' : 'Edit meal'}</h2>
-    <jsp:useBean id="meal" type="ru.javawebinar.topjava.model.Meal" scope="request"/>
+    <h2>${meal.new  ? 'Create meal' : 'Edit meal'}</h2>
     <form method="post" action="meals">
         <input type="hidden" name="id" value="${meal.id}">
         <dl>
