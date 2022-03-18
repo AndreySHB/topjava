@@ -8,6 +8,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import ru.javawebinar.topjava.model.Meal;
 import ru.javawebinar.topjava.service.MealService;
 import ru.javawebinar.topjava.to.MealTo;
@@ -24,13 +25,14 @@ import static ru.javawebinar.topjava.util.DateTimeUtil.parseLocalDate;
 import static ru.javawebinar.topjava.util.DateTimeUtil.parseLocalTime;
 
 @Controller
+@RequestMapping(value = "/meals")
 public class JspMealController {
     private static final Logger log = LoggerFactory.getLogger(JspMealController.class);
 
     @Autowired
     private MealService service;
 
-    @GetMapping("/meals/delete/{id}")
+    @GetMapping("/delete/{id}")
     public String deleteMeal(@PathVariable("id") int id) {
         final int userId = SecurityUtil.authUserId();
         log.info("delete meal {} for user {}", id, userId);
@@ -38,7 +40,7 @@ public class JspMealController {
         return "redirect:/meals";
     }
 
-    @GetMapping("/meals/update/{id}")
+    @GetMapping("/update/{id}")
     public String getCreateMenuMeal(Model model, @PathVariable("id") int id) {
         final int userId = SecurityUtil.authUserId();
         log.info("goto update menu for meal {} user {}", id, userId);
@@ -46,7 +48,7 @@ public class JspMealController {
         return "mealForm";
     }
 
-    @GetMapping("/meals/create")
+    @GetMapping("/create")
     public String getUpdateMenuMeal(Model model) {
         log.info("goto create menu for user {}", SecurityUtil.authUserId());
         final Meal meal = new Meal(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES), "", 1000);
@@ -54,7 +56,7 @@ public class JspMealController {
         return "mealForm";
     }
 
-    @GetMapping("/meals")
+    @GetMapping()
     public String getMeals(Model model, HttpServletRequest request) {
         int userId = SecurityUtil.authUserId();
         if ("true".equals(request.getParameter("filter"))) {
@@ -73,30 +75,23 @@ public class JspMealController {
         return "meals";
     }
 
-    @PostMapping("/meals/meals")
-    public String createMeal(Model model, HttpServletRequest request) {
-        int userId = SecurityUtil.authUserId();
+    @PostMapping("/save")
+    public String setMeal(Model model, HttpServletRequest request) {
         Meal meal = new Meal(
                 LocalDateTime.parse(request.getParameter("dateTime")),
                 request.getParameter("description"),
                 Integer.parseInt(request.getParameter("calories")));
-        log.info("create new meal for user {}", userId);
-        service.create(meal, userId);
-        putMealTos(model, MealsUtil.getTos(service.getAll(userId), SecurityUtil.authUserCaloriesPerDay()));
-        return "redirect:/meals";
-    }
-
-    @PostMapping("meals/update/meals")
-    public String updateMeal(Model model, HttpServletRequest request) {
         int userId = SecurityUtil.authUserId();
-        int id = Integer.parseInt(request.getParameter("id"));
-        Meal meal = new Meal(
-                id,
-                LocalDateTime.parse(request.getParameter("dateTime")),
-                request.getParameter("description"),
-                Integer.parseInt(request.getParameter("calories")));
-        log.info("update meal {} for user {}", id, userId);
-        service.update(meal, userId);
+        String s = request.getParameter("id");
+        if (s != null && !s.isEmpty()) {
+            int id = Integer.parseInt(s);
+            meal.setId(Integer.parseInt(s));
+            log.info("update meal {} for user {}", id, userId);
+            service.update(meal, userId);
+        } else {
+            log.info("create new meal for user {}", userId);
+            service.create(meal, userId);
+        }
         putMealTos(model, MealsUtil.getTos(service.getAll(userId), SecurityUtil.authUserCaloriesPerDay()));
         return "redirect:/meals";
     }
