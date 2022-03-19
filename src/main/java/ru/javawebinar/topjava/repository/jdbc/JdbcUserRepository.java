@@ -1,9 +1,6 @@
 package ru.javawebinar.topjava.repository.jdbc;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
-import org.springframework.context.support.GenericXmlApplicationContext;
 import org.springframework.dao.support.DataAccessUtils;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -11,22 +8,23 @@ import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
-import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
-import org.springframework.web.context.WebApplicationContext;
-import org.springframework.web.context.support.XmlWebApplicationContext;
-import ru.javawebinar.topjava.Profiles;
+import ru.javawebinar.topjava.model.Role;
 import ru.javawebinar.topjava.model.User;
 import ru.javawebinar.topjava.repository.UserRepository;
-import ru.javawebinar.topjava.model.Role;
 
-import javax.sql.DataSource;
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
+import javax.validation.Validation;
+import javax.validation.Validator;
 import java.util.*;
 
 @Repository
+@Transactional(readOnly = true)
 public class JdbcUserRepository implements UserRepository {
 
     private static final BeanPropertyRowMapper<User> ROW_MAPPER = BeanPropertyRowMapper.newInstance(User.class);
@@ -39,6 +37,8 @@ public class JdbcUserRepository implements UserRepository {
 
     private final DataSourceTransactionManager transactionManager;
 
+    private static final Validator VALIDATOR = Validation.buildDefaultValidatorFactory().getValidator();
+
     @Autowired
     public JdbcUserRepository(JdbcTemplate jdbcTemplate, NamedParameterJdbcTemplate namedParameterJdbcTemplate, DataSourceTransactionManager transactionManager) {
         this.insertUser = new SimpleJdbcInsert(jdbcTemplate)
@@ -48,35 +48,6 @@ public class JdbcUserRepository implements UserRepository {
         this.jdbcTemplate = jdbcTemplate;
         this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
         this.transactionManager = transactionManager;
-    }
-
-    //TODO
-    private User simpleSave(User user) {
-        BeanPropertySqlParameterSource parameterSource = new BeanPropertySqlParameterSource(user);
-        if (user.isNew()) {
-            Number newKey = insertUser.executeAndReturnKey(parameterSource);
-            user.setId(newKey.intValue());
-            for (Role r : user.getRoles()) {
-                jdbcTemplate.update("INSERT INTO user_roles VALUES (?,?)", user.id(), r.name());
-            }
-        } else if (namedParameterJdbcTemplate.update("""
-                   UPDATE users SET name=:name, email=:email, password=:password,
-                   registered=:registered, enabled=:enabled, calories_per_day=:caloriesPerDay WHERE id=:id
-                """, parameterSource) == 0) {
-            return null;
-        }
-        return user;
-    }
-
-    public static void main(String[] args) {
-        try (GenericXmlApplicationContext appCtx = new GenericXmlApplicationContext()) {
-            appCtx.getEnvironment().setActiveProfiles(Profiles.getActiveDbProfile(),Profiles.JDBC);
-            appCtx.load("spring/spring-db.xml");
-            appCtx.refresh();
-            System.out.println("Bean definition names: " + Arrays.toString(appCtx.getBeanDefinitionNames()));
-            DataSource dataSource = new org.apache.tomcat.jdbc.pool.DataSource();
-            //jdbcTemplate.update("INSERT INTO user_roles VALUES (?,?)", "user.id()", "r.name()");
-        }
     }
 
     @Override
@@ -108,7 +79,10 @@ public class JdbcUserRepository implements UserRepository {
     @Override
     public User get(int id) {
         User user = DataAccessUtils.singleResult(jdbcTemplate.query("SELECT * FROM users WHERE id=?", ROW_MAPPER, id));
-        user.setRoles(jdbcTemplate.queryForList("SELECT ur.role FROM user_roles ur WHERE ur.user_id=?", Role.class, user.id()));
+        if (user == null) {
+            return null;
+        }
+        user.setRoles(jdbcTemplate.queryForList("SELECT ur.role FROM user_roles ur WHERE ur.user_id=?", Role.class, id));
         return user;
     }
 
@@ -129,20 +103,37 @@ public class JdbcUserRepository implements UserRepository {
         for (int i = 0; i < listSerials.size(); i++) {
             rolesMap.get(listSerials.get(i)).add(listRoles.get(i));
         }
-        for (User u : users) {
-            u.setRoles(rolesMap.get(u.id()));
-        }
+        users.forEach(user -> user.setRoles(rolesMap.get(user.id())));
         return users;
+    }
+
+    private boolean simpleDelete(int id) {
+        boolean deleted = jdbcTemplate.update("DELETE FROM users WHERE id=?", id) != 0;
+        jdbcTemplate.update("DELETE FROM user_roles WHERE user_id=?", id);
+        return deleted;
+    }
+
+    private User simpleSave(User user) {
+        Set<ConstraintViolation<User>> violations = VALIDATOR.validate(user);
+        if (!violations.isEmpty()) {
+            throw new ConstraintViolationException(violations);
+        }
+        BeanPropertySqlParameterSource parameterSource = new BeanPropertySqlParameterSource(user);
+        if (user.isNew()) {
+            Number newKey = insertUser.executeAndReturnKey(parameterSource);
+            user.setId(newKey.intValue());
+        } else if (namedParameterJdbcTemplate.update("""
+                   UPDATE users SET name=:name, email=:email, password=:password,
+                   registered=:registered, enabled=:enabled, calories_per_day=:caloriesPerDay WHERE id=:id
+                """, parameterSource) != 0) {
+            jdbcTemplate.update("DELETE FROM user_roles r WHERE user_id=?", user.id());
+        }
+        user.getRoles().forEach(role -> jdbcTemplate.update("INSERT INTO user_roles VALUES (?,?)", user.id(), role.name()));
+        return user;
     }
 
     private TransactionStatus getTransactionStatus() {
         TransactionDefinition txDef = new DefaultTransactionDefinition();
         return transactionManager.getTransaction(txDef);
-    }
-
-    private boolean simpleDelete(int id) {
-        boolean deleted = jdbcTemplate.update("DELETE FROM users WHERE id=?", id) != 0;
-        jdbcTemplate.update("DELETE FROM user_role ur WHERE ur.user_id=?", id);
-        return deleted;
     }
 }
