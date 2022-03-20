@@ -1,18 +1,16 @@
-package ru.javawebinar.topjava.web;
+package ru.javawebinar.topjava.web.meal;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import ru.javawebinar.topjava.model.Meal;
-import ru.javawebinar.topjava.service.MealService;
 import ru.javawebinar.topjava.to.MealTo;
 import ru.javawebinar.topjava.util.MealsUtil;
+import ru.javawebinar.topjava.web.SecurityUtil;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDate;
@@ -24,13 +22,10 @@ import java.util.List;
 import static ru.javawebinar.topjava.util.DateTimeUtil.parseLocalDate;
 import static ru.javawebinar.topjava.util.DateTimeUtil.parseLocalTime;
 
+@Validated
 @Controller
 @RequestMapping(value = "/meals")
-public class JspMealController {
-    private static final Logger log = LoggerFactory.getLogger(JspMealController.class);
-
-    @Autowired
-    private MealService service;
+public class JspMealController extends AbstractMealController {
 
     @GetMapping("/delete/{id}")
     public String deleteMeal(@PathVariable("id") int id) {
@@ -76,7 +71,7 @@ public class JspMealController {
     }
 
     @PostMapping("/save")
-    public String setMeal(Model model, HttpServletRequest request) {
+    public String save(Model model, HttpServletRequest request) {
         Meal meal = new Meal(
                 LocalDateTime.parse(request.getParameter("dateTime")),
                 request.getParameter("description"),

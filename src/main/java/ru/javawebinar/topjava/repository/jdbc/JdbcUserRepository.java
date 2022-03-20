@@ -47,6 +47,7 @@ public class JdbcUserRepository implements UserRepository {
     }
 
     @Override
+    @Transactional
     public User save(User user) {
         TransactionStatus txStatus = getTransactionStatus();
         try {
@@ -60,6 +61,7 @@ public class JdbcUserRepository implements UserRepository {
     }
 
     @Override
+    @Transactional
     public boolean delete(int id) {
         TransactionStatus txStatus = getTransactionStatus();
         try {
@@ -85,6 +87,9 @@ public class JdbcUserRepository implements UserRepository {
     @Override
     public User getByEmail(String email) {
         User user = DataAccessUtils.singleResult(jdbcTemplate.query("SELECT * FROM users WHERE email=?", ROW_MAPPER, email));
+        if (user == null) {
+            return null;
+        }
         user.setRoles(jdbcTemplate.queryForList("SELECT ur.role FROM user_roles ur WHERE ur.user_id=?", Role.class, user.id()));
         return user;
     }

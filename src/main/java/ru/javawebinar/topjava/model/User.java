@@ -3,6 +3,7 @@ package ru.javawebinar.topjava.model;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.*;
 import org.hibernate.validator.constraints.Range;
+import org.hibernate.validator.constraints.UniqueElements;
 import org.springframework.util.CollectionUtils;
 
 import javax.persistence.Entity;
@@ -11,11 +12,13 @@ import javax.persistence.NamedQuery;
 import javax.persistence.OrderBy;
 import javax.persistence.Table;
 import javax.persistence.*;
+import javax.validation.Constraint;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static ru.javawebinar.topjava.util.MealsUtil.DEFAULT_CALORIES_PER_DAY;
 
@@ -68,9 +71,10 @@ public class User extends AbstractNamedEntity {
     private int caloriesPerDay = DEFAULT_CALORIES_PER_DAY;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "user")//, cascade = CascadeType.REMOVE, orphanRemoval = true)
-    @OrderBy("dateTime DESC")
+//    @OrderBy("dateTime DESC")
     @OnDelete(action = OnDeleteAction.CASCADE) //https://stackoverflow.com/a/44988100/548473
-    private List<Meal> meals;
+//    @UniqueElements не работает
+    private Set<Meal> meals;
 
     public User() {
     }
@@ -142,7 +146,7 @@ public class User extends AbstractNamedEntity {
     }
 
     public List<Meal> getMeals() {
-        return meals;
+        return meals.stream().sorted((o1, o2) -> o2.getDateTime().compareTo(o1.getDateTime())).collect(Collectors.toList());
     }
 
     @Override

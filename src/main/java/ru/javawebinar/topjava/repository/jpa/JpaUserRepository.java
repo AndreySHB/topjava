@@ -1,10 +1,10 @@
 package ru.javawebinar.topjava.repository.jpa;
 
-import org.springframework.dao.support.DataAccessUtils;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import ru.javawebinar.topjava.model.User;
 import ru.javawebinar.topjava.repository.UserRepository;
+import ru.javawebinar.topjava.util.exception.NotFoundException;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -59,9 +59,13 @@ public class JpaUserRepository implements UserRepository {
 
     @Override
     public User getByEmail(String email) {
-        return em.createNamedQuery(User.BY_EMAIL, User.class)
+        List<User> resultList = em.createNamedQuery(User.BY_EMAIL, User.class)
                 .setParameter(1, email)
-                .getResultList().get(0);
+                .getResultList();
+        if (resultList.isEmpty()){
+            throw new NotFoundException(String.format("User with email = %s is not exist",email));
+        }
+        return resultList.get(0);
     }
 
     @Override
