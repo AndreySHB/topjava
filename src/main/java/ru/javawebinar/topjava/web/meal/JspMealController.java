@@ -52,26 +52,29 @@ public class JspMealController extends AbstractMealController {
     }
 
     @GetMapping()
-    public String getMeals(Model model, HttpServletRequest request) {
+    public String getMeals(Model model) {
         int userId = SecurityUtil.authUserId();
-        if ("true".equals(request.getParameter("filter"))) {
-            LocalDate startDate = parseLocalDate(request.getParameter("startDate"));
-            LocalDate endDate = parseLocalDate(request.getParameter("endDate"));
-            LocalTime startTime = parseLocalTime(request.getParameter("startTime"));
-            LocalTime endTime = parseLocalTime(request.getParameter("endTime"));
-            log.info("getAll filtered for user {}", userId);
-            List<Meal> mealsDateFiltered = service.getBetweenInclusive(startDate, endDate, userId);
-            putMealTos(model, MealsUtil.getFilteredTos(mealsDateFiltered,
-                    SecurityUtil.authUserCaloriesPerDay(), startTime, endTime));
-            return "meals";
-        }
         log.info("getAll for user {}", userId);
         putMealTos(model, MealsUtil.getTos(service.getAll(userId), SecurityUtil.authUserCaloriesPerDay()));
         return "meals";
     }
 
+    @GetMapping("/filter")
+    public String getFilteredMeals(Model model, HttpServletRequest request) {
+        int userId = SecurityUtil.authUserId();
+        LocalDate startDate = parseLocalDate(request.getParameter("startDate"));
+        LocalDate endDate = parseLocalDate(request.getParameter("endDate"));
+        LocalTime startTime = parseLocalTime(request.getParameter("startTime"));
+        LocalTime endTime = parseLocalTime(request.getParameter("endTime"));
+        log.info("getAll filtered for user {}", userId);
+        List<Meal> mealsDateFiltered = service.getBetweenInclusive(startDate, endDate, userId);
+        putMealTos(model, MealsUtil.getFilteredTos(mealsDateFiltered,
+                SecurityUtil.authUserCaloriesPerDay(), startTime, endTime));
+        return "meals";
+    }
+
     @PostMapping("/save")
-    public String save(Model model, HttpServletRequest request) {
+    public String save(HttpServletRequest request) {
         Meal meal = new Meal(
                 LocalDateTime.parse(request.getParameter("dateTime")),
                 request.getParameter("description"),
@@ -87,7 +90,6 @@ public class JspMealController extends AbstractMealController {
             log.info("create new meal for user {}", userId);
             service.create(meal, userId);
         }
-        putMealTos(model, MealsUtil.getTos(service.getAll(userId), SecurityUtil.authUserCaloriesPerDay()));
         return "redirect:/meals";
     }
 

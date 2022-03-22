@@ -10,7 +10,7 @@
 <section>
     <hr>
     <h2><spring:message code="${meal.new ? 'meal.createmeal' : 'meal.editmeal'}"/></h2>
-    <form method="post" action="/topjava/meals/save">
+    <form method="post" action="${pageContext.request.contextPath}/meals/save">
         <input type="hidden" name="id" value="${meal.id}">
         <dl>
             <dt><spring:message code="meal.datetime"/>:</dt>

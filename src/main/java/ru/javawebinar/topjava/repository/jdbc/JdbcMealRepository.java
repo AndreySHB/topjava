@@ -9,10 +9,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.TransactionDefinition;
-import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.DefaultTransactionDefinition;
 import ru.javawebinar.topjava.model.Meal;
 import ru.javawebinar.topjava.repository.JdbcValidationUtil;
 import ru.javawebinar.topjava.repository.MealRepository;
@@ -46,21 +43,6 @@ public class JdbcMealRepository implements MealRepository {
 
     @Override
     @Transactional
-    public Meal save(Meal meal, int userId) {
-        TransactionDefinition txDef = new DefaultTransactionDefinition();
-        TransactionStatus txStatus = transactionManager.getTransaction(txDef);
-        try {
-            Meal returnMeal = simpleSave(meal, userId);
-            transactionManager.commit(txStatus);
-            return returnMeal;
-        } catch (Exception e) {
-            transactionManager.rollback(txStatus);
-            throw e;
-        }
-    }
-
-    @Override
-    @Transactional
     public boolean delete(int id, int userId) {
         return jdbcTemplate.update("DELETE FROM meals WHERE id=? AND user_id=?", id, userId) != 0;
     }
@@ -85,7 +67,9 @@ public class JdbcMealRepository implements MealRepository {
                 ROW_MAPPER, userId, startDateTime, endDateTime);
     }
 
-    private Meal simpleSave(Meal meal, int userId) {
+    @Override
+    @Transactional
+    public Meal save(Meal meal, int userId) {
         JdbcValidationUtil.Validate(meal);
         MapSqlParameterSource map = new MapSqlParameterSource()
                 .addValue("id", meal.getId())

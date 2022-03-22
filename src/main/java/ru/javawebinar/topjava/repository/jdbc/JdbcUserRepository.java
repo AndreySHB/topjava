@@ -2,6 +2,7 @@ package ru.javawebinar.topjava.repository.jdbc;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.support.DataAccessUtils;
+import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
@@ -10,15 +11,14 @@ import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.TransactionDefinition;
-import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.DefaultTransactionDefinition;
 import ru.javawebinar.topjava.model.Role;
 import ru.javawebinar.topjava.model.User;
 import ru.javawebinar.topjava.repository.JdbcValidationUtil;
 import ru.javawebinar.topjava.repository.UserRepository;
 
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.*;
 
 @Repository
@@ -47,34 +47,6 @@ public class JdbcUserRepository implements UserRepository {
     }
 
     @Override
-    @Transactional
-    public User save(User user) {
-        TransactionStatus txStatus = getTransactionStatus();
-        try {
-            User returnUser = simpleSave(user);
-            transactionManager.commit(txStatus);
-            return returnUser;
-        } catch (Exception e) {
-            transactionManager.rollback(txStatus);
-            throw e;
-        }
-    }
-
-    @Override
-    @Transactional
-    public boolean delete(int id) {
-        TransactionStatus txStatus = getTransactionStatus();
-        try {
-            boolean deleted = simpleDelete(id);
-            transactionManager.commit(txStatus);
-            return deleted;
-        } catch (Exception e) {
-            transactionManager.rollback(txStatus);
-            throw e;
-        }
-    }
-
-    @Override
     public User get(int id) {
         User user = DataAccessUtils.singleResult(jdbcTemplate.query("SELECT * FROM users WHERE id=?", ROW_MAPPER, id));
         if (user == null) {
@@ -100,8 +72,8 @@ public class JdbcUserRepository implements UserRepository {
         SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet("SELECT ur.user_id, ur.role  FROM user_roles ur");
         Map<Integer, Set<Role>> rolesMap = new HashMap<>();
         users.forEach(user -> rolesMap.computeIfAbsent(user.id(), integer -> new HashSet<>()));
-        while (sqlRowSet.next()){
-            int userId=sqlRowSet.getInt("user_id");
+        while (sqlRowSet.next()) {
+            int userId = sqlRowSet.getInt("user_id");
             Role role = Role.valueOf(sqlRowSet.getString("role"));
             rolesMap.get(userId).add(role);
         }
@@ -109,13 +81,17 @@ public class JdbcUserRepository implements UserRepository {
         return users;
     }
 
-    private boolean simpleDelete(int id) {
+    @Override
+    @Transactional
+    public boolean delete(int id) {
         boolean deleted = jdbcTemplate.update("DELETE FROM users WHERE id=?", id) != 0;
         jdbcTemplate.update("DELETE FROM user_roles WHERE user_id=?", id);
         return deleted;
     }
 
-    private User simpleSave(User user) {
+    @Override
+    @Transactional
+    public User save(User user) {
         JdbcValidationUtil.Validate(user);
         BeanPropertySqlParameterSource parameterSource = new BeanPropertySqlParameterSource(user);
         if (user.isNew()) {
@@ -127,12 +103,20 @@ public class JdbcUserRepository implements UserRepository {
                 """, parameterSource) != 0) {
             jdbcTemplate.update("DELETE FROM user_roles r WHERE user_id=?", user.id());
         }
-        user.getRoles().forEach(role -> jdbcTemplate.update("INSERT INTO user_roles VALUES (?,?)", user.id(), role.name()));
-        return user;
-    }
+        int userId = user.id();
+        List<Role> roles = user.getRoles().stream().toList();
+        jdbcTemplate.batchUpdate("INSERT INTO user_roles VALUES (?,?)", new BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(PreparedStatement ps, int i) throws SQLException {
+                ps.setInt(1, userId);
+                ps.setString(2, roles.get(i).toString());
+            }
 
-    private TransactionStatus getTransactionStatus() {
-        TransactionDefinition txDef = new DefaultTransactionDefinition();
-        return transactionManager.getTransaction(txDef);
+            @Override
+            public int getBatchSize() {
+                return user.getRoles().size();
+            }
+        });
+        return user;
     }
 }
