@@ -25,6 +25,16 @@ public abstract class AbstractUserServiceTest extends AbstractServiceTest {
     protected UserService service;
 
     @Test
+    public void createWithEmptyRoles() {
+        User created = service.create(getNewWithNoRoles());
+        int newId = created.id();
+        User newUser = getNewWithNoRoles();
+        newUser.setId(newId);
+        USER_MATCHER.assertMatch(created, newUser);
+        USER_MATCHER.assertMatch(service.get(newId), newUser);
+    }
+
+    @Test
     public void create() {
         User created = service.create(getNew());
         int newId = created.id();
@@ -74,14 +84,14 @@ public abstract class AbstractUserServiceTest extends AbstractServiceTest {
     }
 
     @Test
-    public void /*update*/a() {
+    public void update() {
         User updated = getUpdated();
         service.update(updated);
-        USER_MATCHER.assertMatch(service.getAll(), getUpdated(), admin, guest);
+        USER_MATCHER.assertMatch(service.getAll(), admin, guest, updated);
     }
 
     @Test
-    public void /*getAll*/b() {
+    public void getAll() {
         List<User> all = service.getAll();
         USER_MATCHER.assertMatch(all, admin, guest, user);
     }

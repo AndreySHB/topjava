@@ -9,11 +9,10 @@ import java.util.Set;
 public class JdbcValidationUtil {
     private static final Validator VALIDATOR = Validation.buildDefaultValidatorFactory().getValidator();
 
-    public static <T> void Validate(T t) {
+    public static <T> void validate(T t) {
         Set<ConstraintViolation<T>> violations = VALIDATOR.validate(t);
         if (!violations.isEmpty()) {
             throw new ConstraintViolationException(violations);
         }
-
     }
 }

@@ -22,7 +22,7 @@ import java.sql.SQLException;
 import java.util.*;
 
 @Repository
-@Transactional(readOnly = true)
+@Transactional(readOnly = true, value = "txManager")
 public class JdbcUserRepository implements UserRepository {
 
     private static final BeanPropertyRowMapper<User> ROW_MAPPER = BeanPropertyRowMapper.newInstance(User.class);
@@ -33,8 +33,6 @@ public class JdbcUserRepository implements UserRepository {
 
     private final SimpleJdbcInsert insertUser;
 
-    private final DataSourceTransactionManager transactionManager;
-
     @Autowired
     public JdbcUserRepository(JdbcTemplate jdbcTemplate, NamedParameterJdbcTemplate namedParameterJdbcTemplate, DataSourceTransactionManager transactionManager) {
         this.insertUser = new SimpleJdbcInsert(jdbcTemplate)
@@ -43,27 +41,18 @@ public class JdbcUserRepository implements UserRepository {
 
         this.jdbcTemplate = jdbcTemplate;
         this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
-        this.transactionManager = transactionManager;
     }
 
     @Override
     public User get(int id) {
         User user = DataAccessUtils.singleResult(jdbcTemplate.query("SELECT * FROM users WHERE id=?", ROW_MAPPER, id));
-        if (user == null) {
-            return null;
-        }
-        user.setRoles(jdbcTemplate.queryForList("SELECT ur.role FROM user_roles ur WHERE ur.user_id=?", Role.class, id));
-        return user;
+        return getUserWithRoles(user);
     }
 
     @Override
     public User getByEmail(String email) {
         User user = DataAccessUtils.singleResult(jdbcTemplate.query("SELECT * FROM users WHERE email=?", ROW_MAPPER, email));
-        if (user == null) {
-            return null;
-        }
-        user.setRoles(jdbcTemplate.queryForList("SELECT ur.role FROM user_roles ur WHERE ur.user_id=?", Role.class, user.id()));
-        return user;
+        return getUserWithRoles(user);
     }
 
     @Override
@@ -82,17 +71,15 @@ public class JdbcUserRepository implements UserRepository {
     }
 
     @Override
-    @Transactional
+    @Transactional(value = "txManager")
     public boolean delete(int id) {
-        boolean deleted = jdbcTemplate.update("DELETE FROM users WHERE id=?", id) != 0;
-        jdbcTemplate.update("DELETE FROM user_roles WHERE user_id=?", id);
-        return deleted;
+        return jdbcTemplate.update("DELETE FROM users WHERE id=?", id) != 0;
     }
 
     @Override
-    @Transactional
+    @Transactional(value = "txManager")
     public User save(User user) {
-        JdbcValidationUtil.Validate(user);
+        JdbcValidationUtil.validate(user);
         BeanPropertySqlParameterSource parameterSource = new BeanPropertySqlParameterSource(user);
         if (user.isNew()) {
             Number newKey = insertUser.executeAndReturnKey(parameterSource);
@@ -105,18 +92,28 @@ public class JdbcUserRepository implements UserRepository {
         }
         int userId = user.id();
         List<Role> roles = user.getRoles().stream().toList();
-        jdbcTemplate.batchUpdate("INSERT INTO user_roles VALUES (?,?)", new BatchPreparedStatementSetter() {
-            @Override
-            public void setValues(PreparedStatement ps, int i) throws SQLException {
-                ps.setInt(1, userId);
-                ps.setString(2, roles.get(i).toString());
-            }
+        if (!roles.isEmpty()) {
+            jdbcTemplate.batchUpdate("INSERT INTO user_roles VALUES (?,?)", new BatchPreparedStatementSetter() {
+                @Override
+                public void setValues(PreparedStatement ps, int i) throws SQLException {
+                    ps.setInt(1, userId);
+                    ps.setString(2, roles.get(i).toString());
+                }
 
-            @Override
-            public int getBatchSize() {
-                return user.getRoles().size();
-            }
-        });
+                @Override
+                public int getBatchSize() {
+                    return user.getRoles().size();
+                }
+            });
+        }
+        return user;
+    }
+
+    private User getUserWithRoles(User user) {
+        if (user == null) {
+            return null;
+        }
+        user.setRoles(jdbcTemplate.queryForList("SELECT ur.role FROM user_roles ur WHERE ur.user_id=?", Role.class, user.id()));
         return user;
     }
 }
