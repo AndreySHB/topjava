@@ -1,4 +1,4 @@
-package ru.javawebinar.topjava.repository;
+package ru.javawebinar.topjava.util;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;

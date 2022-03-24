@@ -8,21 +8,21 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
-import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import ru.javawebinar.topjava.model.Role;
 import ru.javawebinar.topjava.model.User;
-import ru.javawebinar.topjava.repository.JdbcValidationUtil;
+import ru.javawebinar.topjava.util.JdbcValidationUtil;
 import ru.javawebinar.topjava.repository.UserRepository;
 
+import javax.validation.constraints.NotNull;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.*;
 
 @Repository
-@Transactional(readOnly = true, value = "txManager")
+@Transactional(readOnly = true)
 public class JdbcUserRepository implements UserRepository {
 
     private static final BeanPropertyRowMapper<User> ROW_MAPPER = BeanPropertyRowMapper.newInstance(User.class);
@@ -34,7 +34,7 @@ public class JdbcUserRepository implements UserRepository {
     private final SimpleJdbcInsert insertUser;
 
     @Autowired
-    public JdbcUserRepository(JdbcTemplate jdbcTemplate, NamedParameterJdbcTemplate namedParameterJdbcTemplate, DataSourceTransactionManager transactionManager) {
+    public JdbcUserRepository(JdbcTemplate jdbcTemplate, NamedParameterJdbcTemplate namedParameterJdbcTemplate) {
         this.insertUser = new SimpleJdbcInsert(jdbcTemplate)
                 .withTableName("users")
                 .usingGeneratedKeyColumns("id");
@@ -57,10 +57,10 @@ public class JdbcUserRepository implements UserRepository {
 
     @Override
     public List<User> getAll() {
-        List<User> users = jdbcTemplate.query("SELECT * FROM users ORDER BY name, email", ROW_MAPPER);
-        SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet("SELECT ur.user_id, ur.role  FROM user_roles ur");
         Map<Integer, Set<Role>> rolesMap = new HashMap<>();
-        users.forEach(user -> rolesMap.computeIfAbsent(user.id(), integer -> new HashSet<>()));
+        List<User> users = jdbcTemplate.query("SELECT * FROM users ORDER BY name, email", ROW_MAPPER);
+        users.forEach(user -> rolesMap.put(user.id(), new HashSet<>()));
+        SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet("SELECT ur.user_id, ur.role  FROM user_roles ur");
         while (sqlRowSet.next()) {
             int userId = sqlRowSet.getInt("user_id");
             Role role = Role.valueOf(sqlRowSet.getString("role"));
@@ -71,13 +71,13 @@ public class JdbcUserRepository implements UserRepository {
     }
 
     @Override
-    @Transactional(value = "txManager")
+    @Transactional
     public boolean delete(int id) {
         return jdbcTemplate.update("DELETE FROM users WHERE id=?", id) != 0;
     }
 
     @Override
-    @Transactional(value = "txManager")
+    @Transactional
     public User save(User user) {
         JdbcValidationUtil.validate(user);
         BeanPropertySqlParameterSource parameterSource = new BeanPropertySqlParameterSource(user);
@@ -91,18 +91,18 @@ public class JdbcUserRepository implements UserRepository {
             jdbcTemplate.update("DELETE FROM user_roles r WHERE user_id=?", user.id());
         }
         int userId = user.id();
-        List<Role> roles = user.getRoles().stream().toList();
+        List<Role> roles = new ArrayList<>(user.getRoles());
         if (!roles.isEmpty()) {
             jdbcTemplate.batchUpdate("INSERT INTO user_roles VALUES (?,?)", new BatchPreparedStatementSetter() {
                 @Override
                 public void setValues(PreparedStatement ps, int i) throws SQLException {
                     ps.setInt(1, userId);
-                    ps.setString(2, roles.get(i).toString());
+                    ps.setString(2, roles.get(i).name());
                 }
 
                 @Override
                 public int getBatchSize() {
-                    return user.getRoles().size();
+                    return roles.size();
                 }
             });
         }

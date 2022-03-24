@@ -19,33 +19,29 @@ import java.util.List;
 import static ru.javawebinar.topjava.util.ValidationUtil.assureIdConsistent;
 import static ru.javawebinar.topjava.util.ValidationUtil.checkNew;
 
-public abstract class AbstractMealController implements MealController {
+public abstract class AbstractMealController {
     protected final Logger log = LoggerFactory.getLogger(getClass());
     @Autowired
     protected MealService service;
 
-    @Override
     public void delete(int id) {
         final int userId = SecurityUtil.authUserId();
         log.info("delete meal {} for user {}", id, userId);
         service.delete(id, userId);
     }
 
-    @Override
     public List<MealTo> getAll() {
         int userId = SecurityUtil.authUserId();
         log.info("getAll for user {}", userId);
         return MealsUtil.getTos(service.getAll(userId), SecurityUtil.authUserCaloriesPerDay());
     }
 
-    @Override
     public Meal get(int id) {
         int userId = SecurityUtil.authUserId();
         log.info("get meal {} for user {}", id, userId);
         return service.get(id, userId);
     }
 
-    @Override
     public Meal create(Meal meal) {
         int userId = SecurityUtil.authUserId();
         checkNew(meal);
@@ -53,7 +49,6 @@ public abstract class AbstractMealController implements MealController {
         return service.create(meal, userId);
     }
 
-    @Override
     public void update(Meal meal, int id) {
         int userId = SecurityUtil.authUserId();
         assureIdConsistent(meal, id);
@@ -61,7 +56,6 @@ public abstract class AbstractMealController implements MealController {
         service.update(meal, userId);
     }
 
-    @Override
     public List<MealTo> getBetween(@Nullable LocalDate startDate, @Nullable LocalTime startTime,
                                    @Nullable LocalDate endDate, @Nullable LocalTime endTime) {
         int userId = SecurityUtil.authUserId();
@@ -71,7 +65,6 @@ public abstract class AbstractMealController implements MealController {
         return MealsUtil.getFilteredTos(mealsDateFiltered, SecurityUtil.authUserCaloriesPerDay(), startTime, endTime);
     }
 
-    @Override
     public Meal getNew() {
         return new Meal(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES), "", 1000);
     }
