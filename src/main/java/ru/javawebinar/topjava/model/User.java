@@ -94,6 +94,10 @@ public class User extends AbstractNamedEntity {
         setRoles(roles);
     }
 
+    public void setMeals(List<Meal> meals) {
+        this.meals = meals;
+    }
+
     public String getEmail() {
         return email;
     }
