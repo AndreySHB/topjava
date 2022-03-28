@@ -3,7 +3,6 @@ package ru.javawebinar.topjava.web.user;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import ru.javawebinar.topjava.model.User;
 import ru.javawebinar.topjava.service.UserService;
@@ -13,8 +12,6 @@ import ru.javawebinar.topjava.web.json.JsonUtil;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static ru.javawebinar.topjava.MealTestData.MEAL_MATCHER;
-import static ru.javawebinar.topjava.MealTestData.meals;
 import static ru.javawebinar.topjava.UserTestData.*;
 import static ru.javawebinar.topjava.web.user.ProfileRestController.REST_URL;
 
@@ -53,13 +50,9 @@ class ProfileRestControllerTest extends AbstractControllerTest {
 
     @Test
     void getWithMeals() throws Exception {
-        MvcResult mvcResult = perform(MockMvcRequestBuilders.get(REST_URL + WITH_MEALS))
+        perform(MockMvcRequestBuilders.get(REST_URL + WITH_MEALS))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(USER_MATCHER.contentJson(user))
-                .andReturn();
-        byte[] contentAsByteArray = mvcResult.getResponse().getContentAsByteArray();
-        User userAfterDeserialization = JsonUtil.readValue(new String(contentAsByteArray), User.class);
-        MEAL_MATCHER.assertMatch(userAfterDeserialization.getMeals(), meals);
+                .andExpect(FULLUSER_MATCHER.contentJson(userWithMeals));
     }
 }
