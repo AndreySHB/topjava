@@ -31,7 +31,7 @@
             </dl>
             <a href="meals">
                 <span class="btn btn-danger">
-                    <span class="fa fa-filter"></span> <spring:message code="common.cancel"/>
+                    <span class="fa fa-remove"></span> <spring:message code="common.cancel"/>
                 </span>
             </a>
             <button type="submit" class="btn btn-primary">
