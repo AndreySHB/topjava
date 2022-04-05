@@ -8,13 +8,13 @@ const ctx = {
             type: "GET",
             url: mealAjaxUrl + "filter",
             data: $("#filter").serialize()
-        }).done(updateTable);
+        }).done(updateTableByData);
     }
 };
 
 function clearFilter() {
     $("#filter")[0].reset();
-    $.get(mealAjaxUrl, updateTable);
+    $.get(mealAjaxUrl, updateTableByData);
 }
 
 // $(document).ready(function () {

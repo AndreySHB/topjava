@@ -53,4 +53,14 @@ public abstract class AbstractUserController {
         log.info("getWithMeals {}", id);
         return service.getWithMeals(id);
     }
+
+    public void enable(int id) {
+        log.info("enable {}", id);
+        service.enable(id);
+    }
+
+    protected boolean disable(int id) {
+        log.info("disable {}", id);
+        return service.disable(id);
+    }
 }
