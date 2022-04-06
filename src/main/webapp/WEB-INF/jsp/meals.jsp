@@ -7,7 +7,6 @@
 <body>
 <script src="resources/js/topjava.common.js" defer></script>
 <script src="resources/js/topjava.meals.js" defer></script>
-<script src="resources/js/datetimepicker.full.js" defer></script>
 <jsp:include page="fragments/bodyHeader.jsp"/>
 <div class="jumbotron-pt4">
     <div class="container">
@@ -18,19 +17,19 @@
                     <div class="row">
                         <div class="col-2">
                             <label for="startDate"><spring:message code="meal.startDate"/></label>
-                            <input class="form-control" name="startDate" id="startDate" autocomplete="off">
+                            <input class="form-control" name="startDate" id="startDate" autocomplete="off" type="date">
                         </div>
                         <div class="col-2">
                             <label for="endDate"><spring:message code="meal.endDate"/></label>
-                            <input class="form-control" name="endDate" id="endDate" autocomplete="off">
+                            <input class="form-control" name="endDate" id="endDate" autocomplete="off" type="date">
                         </div>
                         <div class="offset-2 col-3">
                             <label for="startTime"><spring:message code="meal.startTime"/></label>
-                            <input class="form-control" name="startTime" id="startTime" autocomplete="off">
+                            <input class="form-control" name="startTime" id="startTime" autocomplete="off" type="time">
                         </div>
                         <div class="col-3">
                             <label for="endTime"><spring:message code="meal.endTime"/></label>
-                            <input class="form-control" name="endTime" id="endTime" autocomplete="off">
+                            <input class="form-control" name="endTime" id="endTime" autocomplete="off" type="time">
                         </div>
                     </div>
                 </form>

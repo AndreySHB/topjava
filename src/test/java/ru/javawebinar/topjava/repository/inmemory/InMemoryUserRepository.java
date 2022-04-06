@@ -31,19 +31,10 @@ public class InMemoryUserRepository extends InMemoryBaseRepository<User> impleme
     }
 
     @Override
-    public boolean enable(int id) {
+    public boolean setEnabled(int id, boolean enabled) {
         User user = map.get(id);
         if (user != null) {
-            user.setEnabled(true);
-            return true;
-        } else return false;
-    }
-
-    @Override
-    public boolean disable(int id) {
-        User user = map.get(id);
-        if (user != null) {
-            user.setEnabled(false);
+            user.setEnabled(enabled);
             return true;
         } else return false;
     }

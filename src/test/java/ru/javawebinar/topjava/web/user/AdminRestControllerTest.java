@@ -96,19 +96,19 @@ class AdminRestControllerTest extends AbstractControllerTest {
     }
 
     @Test
-    void enable() throws Exception{
-        assertTrue(userService.disable(USER_ID) && !userService.get(USER_ID).isEnabled());
-        perform(MockMvcRequestBuilders.post(REST_URL+"/enable/"+USER_ID)
-                .param("enabled","true"))
+    void enable() throws Exception {
+        assertTrue(userService.enable(USER_ID, false));
+        perform(MockMvcRequestBuilders.patch(REST_URL + USER_ID)
+                .param("enabled", "true"))
                 .andExpect(status().isNoContent())
                 .andDo(print());
         assertTrue(userService.get(USER_ID).isEnabled());
     }
 
     @Test
-    void disable() throws Exception{
-        perform(MockMvcRequestBuilders.post(REST_URL+"/enable/"+USER_ID)
-                .param("enabled","false"))
+    void disable() throws Exception {
+        perform(MockMvcRequestBuilders.patch(REST_URL + USER_ID)
+                .param("enabled", "false"))
                 .andExpect(status().isNoContent())
                 .andDo(print());
         assertFalse(userService.get(USER_ID).isEnabled());
