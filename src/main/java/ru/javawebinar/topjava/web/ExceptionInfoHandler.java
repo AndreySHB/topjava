@@ -60,6 +60,9 @@ public class ExceptionInfoHandler {
         } else {
             log.warn("{} at request  {}: {}", errorType, req.getRequestURL(), rootCause.toString());
         }
-        return new ErrorInfo(req.getRequestURL(), errorType, rootCause.toString());
+        String message = rootCause.toString();
+        message = message.contains("email_idx") ? "User with this email already exists" : message;
+        message = message.contains("datetime_idx") ? "Meal with this datetime already exists" : message;
+        return new ErrorInfo(req.getRequestURL(), errorType, message);
     }
 }
