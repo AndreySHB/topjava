@@ -1,6 +1,8 @@
 package ru.javawebinar.topjava.to;
 
 import org.hibernate.validator.constraints.Range;
+import org.springframework.stereotype.Component;
+import ru.javawebinar.topjava.to.validation.UniqueEmail;
 import ru.javawebinar.topjava.util.UserUtil;
 
 import javax.validation.constraints.Email;
@@ -10,7 +12,9 @@ import javax.validation.constraints.Size;
 import java.io.Serial;
 import java.io.Serializable;
 
+@Component
 public class UserTo extends BaseTo implements Serializable {
+
     @Serial
     private static final long serialVersionUID = 1L;
 
@@ -21,10 +25,11 @@ public class UserTo extends BaseTo implements Serializable {
     @Email
     @NotBlank
     @Size(max = 100)
+    @UniqueEmail
     private String email;
 
     @NotBlank
-    @Size(min = 5, max = 32, message = "length must be between 5 and 32 characters")
+    @Size(min = 5, max = 32)
     private String password;
 
     @Range(min = 10, max = 10000)
