@@ -1,7 +1,6 @@
 package ru.javawebinar.topjava.to;
 
 import org.hibernate.validator.constraints.Range;
-import org.springframework.stereotype.Component;
 import ru.javawebinar.topjava.to.validation.UniqueEmail;
 import ru.javawebinar.topjava.util.UserUtil;
 
@@ -12,7 +11,6 @@ import javax.validation.constraints.Size;
 import java.io.Serial;
 import java.io.Serializable;
 
-@Component
 public class UserTo extends BaseTo implements Serializable {
 
     @Serial

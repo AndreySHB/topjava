@@ -1,4 +1,4 @@
-package ru.javawebinar.topjava.to.validation;
+package ru.javawebinar.topjava.model.validation;
 
 import javax.validation.Constraint;
 import javax.validation.Payload;
@@ -11,10 +11,10 @@ import static java.lang.annotation.ElementType.FIELD;
 
 @Target(FIELD)
 @Documented
-@Constraint(validatedBy = UniqueEmailValidator.class)
+@Constraint(validatedBy = UniqueDateValidator.class)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface UniqueEmail {
-    String message() default "{common.emailNotDuplicate}";
+public @interface UniqueDate {
+    String message() default "";
 
     Class<?>[] groups() default {};
 
