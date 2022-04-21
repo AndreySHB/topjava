@@ -78,7 +78,6 @@ public class ExceptionInfoHandler {
             case VALIDATION_ERROR -> {
                 if (req.getRequestURI().contains("meals")) {
                     message = rawMessage.contains("NotNull.dateTime") ? message + getLocalMessage("common.dateNotEmpty") : message;
-                    message = rawMessage.contains("UniqueDate") ? message + getLocalMessage("common.dateNotDuplicate") : message;
                     boolean isDescriptionBlank = rawMessage.contains("NotBlank.description");
                     message = isDescriptionBlank ? message + getLocalMessage("common.descriptionNotEmpty") : message;
                     message = rawMessage.contains("Size.description") && !isDescriptionBlank ? message + getLocalMessage("common.descriptionSize") : message;
