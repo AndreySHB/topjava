@@ -1,0 +1,36 @@
+version: '3.7'
+services:
+  tomcat_eb:
+    build: .
+    image: tomcat-topjava
+    container_name: tomcat-topjava-container
+    ports:
+      - 8080:8080
+    restart: on-failure
+    depends_on:
+      - postgresql
+    networks:
+      - eb
+
+#change datasource in .war to: database.url=jdbc:postgresql://host.docker.internal:5432/topjava_db
+  postgresql:
+    build: ./postgresql
+    image: postgres-topjava
+    container_name: postgresql-topjava-container
+    ports:
+      - 5432:5432
+    volumes:
+      - pg_data:/var/lib/postgresql
+    environment:
+      POSTGRES_USER: "user"
+      POSTGRES_PASSWORD: "password"
+      POSTGRES_DB: "topjava_db"
+    restart: always
+    networks:
+      - eb
+
+volumes:
+  pg_data:
+
+networks:
+  eb:
