@@ -13,6 +13,7 @@ services:
       - eb
 
 #change datasource in .war to: database.url=jdbc:postgresql://host.docker.internal:5432/topjava_db
+#net start (or stop) postgresql-x64-14
   postgresql:
     build: ./postgresql
     image: postgres-topjava
